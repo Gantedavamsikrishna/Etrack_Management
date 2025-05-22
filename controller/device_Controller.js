@@ -3,12 +3,9 @@ const device = require("../modals/devices_Scheme");
 // Create a new device
 const createDevice = async (req, res) => {
   try {
-    const { deviceName, price, model, status } = req.body;
+    const { deviceName, devicePrice, deviceModel, deviceStatus } = req.body;
     const newDevice = new device({
-      deviceName,
-      price,
-      model,
-      status,
+     deviceName, devicePrice, deviceModel, deviceStatus
     });
     await newDevice.save();
     res.status(201).json({
@@ -44,10 +41,10 @@ const getDeviceById = async (req, res) => {
 // Update device by id
 const updateDeviceById = async (req, res) => {
   const { id } = req.params;
-  const { deviceName, price, model, status } = req.body;
+  const { deviceName, devicePrice, deviceModel, deviceStatus } = req.body;
   const updatedDevice = await device.findByIdAndUpdate(
     id,
-    { deviceName, price, model, status },
+    { deviceName, devicePrice, deviceModel, deviceStatus },
     { new: true }
   );
   if (!updatedDevice) {
