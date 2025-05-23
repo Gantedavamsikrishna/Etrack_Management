@@ -1,7 +1,7 @@
-//  *************    Change the UI of the card ***********
-//  *********     Make it aligned top of all the other cards by applying higher z-index  ***********
+ 
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
@@ -48,7 +48,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
     setIsEditing(false);
   };
 
-  return (
+  const modalContent = (
     <>
       {enableEdit && (
         <style>
@@ -76,7 +76,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
           `}
         </style>
       )}
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in">
+      <div className="fixed inset-0 z-[1000] w-[100vw] h-[100vh] flex items-center justify-center bg-black/60 animate-fade-in">
         <div 
           className={cn(
             "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
@@ -147,31 +147,31 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     <p className="text-sm sm:text-base">{property.purchaseDate}</p>
                   </div>
                 )}
-         <div className={cn(enableEdit && "field-container")}>
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Status
-                </h4>
-                {enableEdit && isEditing ? (
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="border rounded p-1 w-32 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="working">Working</option>
-                    <option value="not-working">Not Working</option>
-                  </select>
-                ) : (
-                  <div className={cn(
-                    "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-32",
-                    property.status === 'working' 
-                      ? 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300' 
-                      : 'bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300'
-                  )}>
-                    {property.status === 'working' ? 'Working' : 'Not Working'}
-                  </div>
-                )}
-              </div>
+                <div className={cn(enableEdit && "field-container")}>
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Status
+                  </h4>
+                  {enableEdit && isEditing ? (
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="border rounded p-1 w-32 dark:bg-gray-700 dark:text-white "
+                    >
+                      <option value="working">Working</option>
+                      <option value="not-working">Not Working</option>
+                    </select>
+                  ) : (
+                    <div className={cn(
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-32",
+                      property.status === 'working' 
+                        ? 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300' 
+                        : 'bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300'
+                    )}>
+                      {property.status === 'working' ? 'Working' : 'Not Working'}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className={cn(enableEdit && "field-container")}>
@@ -240,4 +240,6 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body);
 };
