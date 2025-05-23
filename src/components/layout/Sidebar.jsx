@@ -145,8 +145,24 @@ export const Sidebar = ({ isOpen }) => {
               )}
             </React.Fragment>
           ))}
+
+          <div className="py-2">
+          <div className="flex items-center px-4">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Admin
+              </h3>
+          </div>
+      </div>
+
+      <NavItem
+        to="/admin-details"
+        icon={<LampDesk className="h-5 w-5" />}
+        label="Admin Details"
+      />
+
         </nav>
       </div>
+
       <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="text-sm text-gray-500 dark:text-gray-400">
           Etrack v0.1.0

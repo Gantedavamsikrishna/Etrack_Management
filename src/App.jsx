@@ -10,6 +10,7 @@ import { Hall } from './pages/Hall';
 import { Room } from './pages/Room';
 import { Inventory } from './pages/Inventory';
 import { BuildingMap } from './pages/BuildingMap';
+import  AdminDetails  from './pages/AdminDetails';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -84,6 +85,14 @@ const AppRoutes = () => {
           </Layout>
         </ProtectedRoute>
       } />
+
+      <Route path="/admin-details" element={
+        <ProtectedRoute>
+          <Layout>
+            <AdminDetails />
+          </Layout>
+        </ProtectedRoute>
+      } />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -92,6 +101,7 @@ const AppRoutes = () => {
 
 function App() {
   return (
+
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
