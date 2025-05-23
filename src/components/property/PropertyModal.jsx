@@ -1,23 +1,16 @@
- 
-
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const propertyIcons = {
-
-  monitor: <Monitor className="h-8 w-8" />,
-  keyboard: <Keyboard className="h-8 w-8" />,
-  mouse: <Mouse className="h-8 w-8" />,
-  fan: <Fan className="h-8 w-8" />,
-  light: <Lightbulb className="h-8 w-8" />,
+  "monitor": <Monitor className="h-8 w-8" />,
+  "keyboard": <Keyboard className="h-8 w-8" />,
+  "mouse": <Mouse className="h-8 w-8" />,
+  "fan": <Fan className="h-8 w-8" />,
+  "light": <Lightbulb className="h-8 w-8" />,
   "wifi-router": <Wifi className="h-8 w-8" />,
-  ac: <AirVent className="h-8 w-8" />,
-
-  
-
+  "ac": <AirVent className="h-8 w-8" />,
 };
 
 export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) => {
@@ -48,7 +41,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
     setIsEditing(false);
   };
 
-  const modalContent = (
+  return (
     <>
       {enableEdit && (
         <style>
@@ -76,7 +69,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
           `}
         </style>
       )}
-      <div className="fixed inset-0 z-[1000] w-[100vw] h-[100vh] flex items-center justify-center bg-black/60 animate-fade-in">
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in">
         <div 
           className={cn(
             "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
@@ -148,7 +141,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                   </div>
                 )}
                 <div className={cn(enableEdit && "field-container")}>
-                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
                     Status
                   </h4>
                   {enableEdit && isEditing ? (
@@ -156,17 +149,17 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="border rounded p-1 w-32 dark:bg-gray-700 dark:text-white "
+                      className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-primary-400"
                     >
                       <option value="working">Working</option>
                       <option value="not-working">Not Working</option>
                     </select>
                   ) : (
                     <div className={cn(
-                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-32",
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium w-full max-w-[120px] sm:max-w-[140px]",
                       property.status === 'working' 
-                        ? 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300' 
-                        : 'bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300'
+                        ? 'bg-success-100/20 text-success-400 dark:bg-success-900/20 dark:text-success-400' 
+                        : 'bg-error-100/20 text-error-400 dark:bg-error-900/20 dark:text-error-400'
                     )}>
                       {property.status === 'working' ? 'Working' : 'Not Working'}
                     </div>
@@ -240,6 +233,4 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       </div>
     </>
   );
-
-  return createPortal(modalContent, document.body);
 };
