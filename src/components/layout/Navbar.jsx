@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import {
   Laptop2,
@@ -12,6 +10,7 @@ import {
   Briefcase,
   MapPin,
   Bell,
+  Check,
 } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Button } from '../ui/Button';
@@ -24,27 +23,89 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
   const [showProfile, setShowProfile] = React.useState(false);
   const [showAlerts, setShowAlerts] = React.useState(false);
 
-  // Mock alerts data (replace with actual data from API or context)
-  const alerts = [
+  // Mock alerts data with read status
+  const [alerts, setAlerts] = React.useState([
     {
       id: 1,
       message: 'Monitor in Server Room is not working',
       date: '2025-05-22T14:00:00Z',
       type: 'critical',
+      read: false,
     },
     {
       id: 2,
       message: 'WiFi Router in IOT Lab needs maintenance',
       date: '2025-05-22T13:30:00Z',
       type: 'warning',
+      read: false,
     },
     {
       id: 3,
       message: 'AC in CEO Cabin is functioning normally',
       date: '2025-05-22T12:15:00Z',
       type: 'info',
+      read: false,
     },
-  ];
+    {
+      id: 4,
+      message: 'Security Camera in Lobby offline',
+      date: '2025-05-22T11:45:00Z',
+      type: 'critical',
+      read: false,
+    },
+    {
+      id: 5,
+      message: 'Printer in Office 2B low on toner',
+      date: '2025-05-22T10:30:00Z',
+      type: 'warning',
+      read: false,
+    },
+    {
+      id: 6,
+      message: 'Backup generator test completed successfully',
+      date: '2025-05-22T09:00:00Z',
+      type: 'info',
+      read: false,
+    },
+    {
+      id: 7,
+      message: 'Light in Conference Room 3A is flickering',
+      date: '2025-05-22T08:30:00Z',
+      type: 'warning',
+      read: false,
+    },
+    {
+      id: 8,
+      message: 'Mouse in Room 4B is unresponsive',
+      date: '2025-05-22T07:45:00Z',
+      type: 'critical',
+      read: false,
+    },
+    {
+      id: 9,
+      message: 'Fan in Hall 5C is operational',
+      date: '2025-05-22T07:00:00Z',
+      type: 'info',
+      read: false,
+    },
+    {
+      id: 10,
+      message: 'Keyboard in IT Lab 2 needs replacement',
+      date: '2025-05-22T06:30:00Z',
+      type: 'warning',
+      read: false,
+    },
+  ]);
+
+  // Calculate the number of unread alerts
+  const unreadCount = alerts.filter((alert) => !alert.read).length;
+
+  // Function to mark all alerts as read
+  const handleMarkAllAsRead = () => {
+    setAlerts((prevAlerts) =>
+      prevAlerts.map((alert) => ({ ...alert, read: true }))
+    );
+  };
 
   return (
     <nav
@@ -90,9 +151,9 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
             aria-label="View alerts"
           >
             <Bell className="h-6 w-6" />
-            {alerts.length > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute top-1 right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                {alerts.length}
+                {unreadCount}
               </span>
             )}
           </button>
@@ -125,7 +186,7 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
                   <button
                     className={cn(
                       'flex w-full items-center px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300',
-                      'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      'hover:bg-gray-100 dark:hover-bg-gray-700'
                     )}
                     onClick={() => {
                       setShowUserMenu(false);
@@ -139,7 +200,7 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
                   <button
                     className={cn(
                       'flex w-full items-center px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300',
-                      'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      'hover:bg-gray-100 dark:hover-bg-gray-700'
                     )}
                     onClick={() => {
                       logout();
@@ -172,15 +233,15 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
             className={cn(
               'relative w-full max-w-md rounded-2xl p-6',
               'shadow-lg shadow-black/10 dark:shadow-white/10',
-              'bg-white/10 dark:bg-white/10 backdrop-blur-md',
-              'border border-white/20 ring-1 ring-white/20',
-              'text-white transition-colors duration-300'
+              'bg-white dark:bg-gray-800',
+              'border border-gray-200 dark:border-gray-600 ring-1 ring-gray-200 dark:ring-gray-600',
+              'text-gray-800 dark:text-gray-200 transition-colors duration-300'
             )}
           >
             {/* Close Button */}
             <button
               onClick={() => setShowProfile(false)}
-              className="absolute top-3 right-3 text-white hover:text-gray-200 text-xl hover:border-2 hover:border-primary-500 dark:hover:border-primary-400 rounded-md p-1"
+              className="absolute top-3 right-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md p-1"
               aria-label="Close"
             >
               ✕
@@ -188,45 +249,45 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
 
             {/* Profile Initial */}
             <div className="flex flex-col items-center space-y-3 mb-5">
-              <div className="h-24 w-24 rounded-full bg-primary-500 flex items-center justify-center text-white text-4xl shadow-xl ring-4 ring-white/40">
+              <div className="h-24 w-24 rounded-full bg-primary-500 flex items-center justify-center text-white text-4xl shadow-xl ring-4 ring-gray-200 dark:ring-gray-600">
                 {user.name?.charAt(0) || 'S'}
               </div>
               <h2 className="text-xl font-bold">{user.name || 'Sandhya Korimi'}</h2>
-              <p className="text-sm text-white">{user.role || 'Admin'}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{user.role || 'Admin'}</p>
             </div>
 
             {/* Profile Details with Icons */}
             <div className="w-full flex flex-col items-center space-y-4 text-sm">
               <div className="flex w-72 items-center">
-                <Mail className="w-4 h-4 mr-2 text-white" />
+                <Mail className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
                 <span className="font-semibold w-28">Email</span>
                 <strong className="mx-1">:</strong>
                 <span>{user.email || 'sandhya@3344'}</span>
               </div>
 
               <div className="flex w-72 items-center">
-                <User className="w-4 h-4 mr-2 text-white" />
+                <User className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
                 <span className="font-semibold w-28">Username</span>
                 <strong className="mx-1">:</strong>
                 <span>{user.username || 'sandhya_k'}</span>
               </div>
 
               <div className="flex w-72 items-center">
-                <Phone className="w-4 h-4 mr-2 text-white" />
+                <Phone className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
                 <span className="font-semibold w-28">Phone</span>
                 <strong className="mx-1">:</strong>
                 <span>{user.phone || '+91 9876543210'}</span>
               </div>
 
               <div className="flex w-72 items-center">
-                <Briefcase className="w-4 h-4 mr-2 text-white" />
+                <Briefcase className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
                 <span className="font-semibold w-28">Role</span>
                 <strong className="mx-1">:</strong>
                 <span>{user.role || 'Admin'}</span>
               </div>
 
               <div className="flex w-72 items-center">
-                <MapPin className="w-4 h-4 mr-2 text-white" />
+                <MapPin className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
                 <span className="font-semibold w-28">Location</span>
                 <strong className="mx-1">:</strong>
                 <span>{user.location || 'Andhra Pradesh, India'}</span>
@@ -237,7 +298,7 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
             <div className="mt-6 flex justify-center">
               <button
                 onClick={() => setShowProfile(false)}
-                className="px-5 py-2 rounded-md bg-primary-500 hover:bg-white/30 text-white font-medium backdrop-blur-sm transition text-sm"
+                className="px-5 py-2 rounded-md bg-primary-500 hover:bg-primary-600 text-white font-medium transition text-sm"
               >
                 Close
               </button>
@@ -248,44 +309,61 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
 
       {/* Alerts Modal */}
       {showAlerts && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in">
           <div
             className={cn(
-              'relative w-full max-w-md rounded-2xl p-6',
-              'shadow-lg shadow-black/10 dark:shadow-white/10',
-              'bg-white/10 dark:bg-white/10 backdrop-blur-md',
-              'border border-white/20 ring-1 ring-white/20',
-              'text-white transition-colors duration-300'
+              'relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-lg',
+              'bg-gray-100 dark:bg-gray-800',
+              'text-gray-800 dark:text-gray-200 transition-colors duration-300'
             )}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button
-              onClick={() => setShowAlerts(false)}
-              className="absolute top-3 right-3 text-white hover:text-gray-200 text-xl hover:border-2 hover:border-primary-500 dark:hover:border-primary-400 rounded-md p-1"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-center mb-5">
-              <Bell className="h-8 w-8 text-white mr-2" />
-              <h2 className="text-xl font-bold">Alerts</h2>
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-gray-300 dark:border-gray-600 p-4">
+              <div className="flex items-center">
+                <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-200 mr-2" />
+                <h2 className="text-lg sm:text-xl font-semibold">Alerts</h2>
+              </div>
+              <button
+                onClick={() => setShowAlerts(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md p-1 transition-colors duration-200"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             {/* Alerts List */}
-            <div className="max-h-80 overflow-y-auto space-y-4">
+            <div
+              className="p-4 space-y-3 overflow-y-auto max-h-80"
+              style={{
+                scrollbarWidth: 'none', /* Firefox */
+                msOverflowStyle: 'none', /* IE and Edge */
+              }}
+            >
+              <style>
+                {`
+                  .max-h-80::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, and Opera */
+                  }
+                `}
+              </style>
               {alerts.length === 0 ? (
-                <p className="text-center text-white">No alerts available.</p>
+                <p className="text-center text-gray-600 dark:text-gray-200 text-sm sm:text-base">No alerts available.</p>
               ) : (
                 alerts.map((alert) => (
                   <div
                     key={alert.id}
-                    className="flex items-start p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20"
+                    className={cn(
+                      'flex items-start p-3 rounded-lg border border-gray-300 dark:border-gray-600',
+                      alert.read
+                        ? 'bg-gray-200 dark:bg-gray-700'
+                        : 'bg-gray-300 dark:bg-gray-600 font-bold'
+                    )}
                   >
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{alert.message}</p>
-                      <p className="text-xs text-gray-300 mt-1">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{alert.message}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {new Date(alert.date).toLocaleString('en-IN', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
@@ -296,9 +374,9 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
                     <span
                       className={cn(
                         'ml-2 px-2 py-1 rounded-full text-xs font-semibold',
-                        alert.type === 'critical' && 'bg-red-500/20 text-red-300',
-                        alert.type === 'warning' && 'bg-yellow-500/20 text-yellow-300',
-                        alert.type === 'info' && 'bg-blue-500/20 text-blue-300'
+                        alert.type === 'critical' && 'bg-red-500/20 text-red-600 dark:text-red-400',
+                        alert.type === 'warning' && 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
+                        alert.type === 'info' && 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       )}
                     >
                       {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)}
@@ -308,14 +386,25 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
               )}
             </div>
 
-            {/* Close Button */}
-            <div className="mt-6 flex justify-center">
-              <button
+            {/* Footer */}
+            <div className="border-t border-gray-300 dark:border-gray-600 flex justify-end space-x-2 p-4">
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={handleMarkAllAsRead}
+                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 transition-all duration-300 ease-in-out"
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Mark All as Read
+                </Button>
+              )}
+              <Button
+                variant="outline"
                 onClick={() => setShowAlerts(false)}
-                className="px-5 py-2 rounded-md bg-primary-500 hover:bg-white/30 text-white font-medium backdrop-blur-sm transition text-sm"
+                className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 transition-all duration-300 ease-in-out"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
