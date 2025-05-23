@@ -324,6 +324,19 @@ export const Sidebar = ({ isOpen, onClose }) => {
                   )}
                 </React.Fragment>
               ))}
+              <div className="py-2">
+            <div className="flex items-center px-4">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Admin
+              </h3>
+            </div>
+          </div>
+
+          <NavItem
+            to="/admin-details"
+            icon={<LampDesk className="h-5 w-5" />}
+            label="Admin Details"
+          />
             </nav>
           </div>
 
