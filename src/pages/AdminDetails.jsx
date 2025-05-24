@@ -1,396 +1,23 @@
-
-// import React, { useState } from "react";
-// const defaultAvatar = "https://www.svgrepo.com/show/382106/user-avatar-default.svg";
-
-// const AdminDetails = () => {
-//   const [admins, setAdmins] = useState([
-//     {
-//       id: 1,
-//       name: "Alice Johnson",
-//       email: "alice@example.com",
-//       role: "Super Admin",
-//       phone: "+1 (555) 123-4567",
-//       status: "Active",
-//       joined: "2023-01-15",
-//       bio: "Alice oversees all building operations and user management.",
-//       avatar: "https://i.pravatar.cc/150?img=32",
-//     },
-//     {
-//       id: 2,
-//       name: "Bob Smith",
-//       email: "bob@example.com",
-//       role: "Building Admin",
-//       phone: "+1 (555) 987-6543",
-//       status: "Inactive",
-//       joined: "2022-07-22",
-//       bio: "Bob manages day-to-day inventory and maintenance requests.",
-//       avatar: "https://i.pravatar.cc/150?img=12",
-//     },
-//     {
-//       id: 3,
-//       name: "Carla Reyes",
-//       email: "carla.reyes@example.com",
-//       role: "Security Admin",
-//       phone: "+1 (555) 765-4321",
-//       status: "Active",
-//       joined: "2023-03-10",
-//       bio: "Carla is responsible for building security and access control.",
-//       avatar: "https://i.pravatar.cc/150?img=45",
-//     },
-//   ]);
-
-//   const [showForm, setShowForm] = useState(false);
-//   const [editId, setEditId] = useState(null);
-
-//   const [newAdmin, setNewAdmin] = useState({
-//     name: "",
-//     email: "",
-//     role: "",
-//     phone: "",
-//     bio: "",
-//     avatar: "",
-//   });
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setNewAdmin((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleImageChange = (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-//     const reader = new FileReader();
-//     reader.onloadend = () =>
-//       setNewAdmin((prev) => ({ ...prev, avatar: reader.result }));
-//     reader.readAsDataURL(file);
-//   };
-
-//   const handleSubmit = (e) => {
-//     const avatar = newAdmin.avatar || defaultAvatar;
-//     e.preventDefault();
-//     if (!newAdmin.name || !newAdmin.email) {
-//       alert("Name and Email are required!");
-//       return;
-//     }
-
-//     if (editId !== null) {
-//       setAdmins((prev) =>
-//         prev.map((admin) =>
-//           admin.id === editId
-//             ? { ...admin, ...newAdmin, avatar: newAdmin.avatar || admin.avatar }
-//             : admin
-//         )
-//       );
-//       setEditId(null);
-//     } else {
-//       const id = admins.length + 1;
-//       const joined = new Date().toISOString().split("T")[0];
-//       const avatar =
-//         newAdmin.avatar || `https://i.pravatar.cc/150?img=${id + 30}`;
-//       setAdmins((prev) => [
-//         ...prev,
-//         { id, ...newAdmin, status: "Active", joined, avatar },
-//       ]);
-//     }
-
-//     setNewAdmin({ name: "", email: "", role: "", phone: "", bio: "", avatar: "" });
-//     setShowForm(false);
-//   };
-
-//   const handleDelete = (id) => {
-//     if (window.confirm("Are you sure you want to delete this admin?")) {
-//       setAdmins((prev) => prev.filter((admin) => admin.id !== id));
-//       if (editId === id) handleCancel();
-//     }
-//   };
-
-//   const handleEdit = (admin) => {
-//     setEditId(admin.id);
-//     setNewAdmin({
-//       name: admin.name,
-//       email: admin.email,
-//       role: admin.role,
-//       phone: admin.phone,
-//       bio: admin.bio,
-//       avatar: admin.avatar,
-//     });
-//     setShowForm(true);
-//   };
-
-//   const handleCancel = () => {
-//     setEditId(null);
-//     setShowForm(false);
-//     setNewAdmin({ name: "", email: "", role: "", phone: "", bio: "", avatar: "" });
-//   };
-
-//   return (
-//     <div className="px-4 py-6">
-//       {/* Header with Button */}
-//       <div className="flex justify-between items-center mb-6">
-//         <h1 className="text-2xl font-bold">Admin Details</h1>
-//         {!showForm && (
-//           <button
-//             onClick={() => setShowForm(true)}
-//             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-//           >
-//             Add Admin User
-//           </button>
-//         )}
-//       </div>
-
-//       {/* Form Section */}
-//       {showForm && (
-//         <form onSubmit={handleSubmit} className="mb-8 space-y-4 max-w-md">
-//           <div>
-//             <label className="block font-semibold mb-1">Profile Image</label>
-//             <input
-//               type="file"
-//               accept="image/*"
-//               onChange={handleImageChange}
-//               className="block w-full border rounded px-3 py-2"
-//             />
-//             {newAdmin.avatar && (
-//               <img
-//                 src={newAdmin.avatar}
-//                 alt="Preview"
-//                 className="mt-2 w-24 h-24 rounded-full border object-cover"
-//               />
-//             )}
-//           </div>
-
-//           <div>
-//             <label className="block font-semibold mb-1">Name*</label>
-//             <input
-//               name="name"
-//               value={newAdmin.name}
-//               onChange={handleChange}
-//               className="w-full border rounded px-3 py-2 bg-gray-300"
-//               required
-//             />
-//           </div>
-
-//           <div>
-//             <label className="block font-semibold mb-1">Email*</label>
-//             <input
-//               name="email"
-//               type="email"
-//               value={newAdmin.email}
-//               onChange={handleChange}
-//               className="w-full border rounded px-3 py-2 bg-gray-300"
-//               required
-//             />
-//           </div>
-
-//           <div>
-//             <label className="block font-semibold mb-1">Role</label>
-//             <input
-//               name="role"
-//               value={newAdmin.role}
-//               onChange={handleChange}
-//               className="w-full border rounded px-3 py-2 bg-gray-300"
-//             />
-//           </div>
-
-//           <div>
-//             <label className="block font-semibold mb-1">Phone</label>
-//             <input
-//               name="phone"
-//               value={newAdmin.phone}
-//               onChange={handleChange}
-//               className="w-full border rounded px-3 py-2 bg-gray-300"
-//             />
-//           </div>
-
-//           <div>
-//             <label className="block font-semibold mb-1">Bio</label>
-//             <textarea
-//               name="bio"
-//               value={newAdmin.bio}
-//               onChange={handleChange}
-//               className="w-full border rounded px-3 py-2 bg-gray-300"
-//               rows={3}
-//             />
-//           </div>
-
-//           <div className="flex space-x-3">
-//             <button
-//               type="submit"
-//               className={`px-4 py-2 rounded text-white ${
-//                 editId !== null ? "bg-yellow-600 hover:bg-yellow-700" : "bg-green-600 hover:bg-green-700"
-//               } transition`}
-//             >
-//               {editId !== null ? "Update Admin" : "Add Admin"}
-//             </button>
-//           </div>
-//         </form>
-//       )}
-
-//       {/* Admin Cards */}
-//       <div className="grid gap-6 md:grid-cols-2">
-//         {admins.map((admin) => (
-//           <div
-//             key={admin.id}
-//             className="p-4 bg-white/10 backdrop-blur-md rounded-2xl shadow-lg flex space-x-4 items-start border border-white/20 transition hover:shadow-xl"
-//           >
-//             <img
-//               src={admin.avatar || defaultAvatar}
-//               alt={`${admin.name}'s avatar`}
-//               className="w-16 h-16 rounded-full object-cover border"
-//             />
-//             <div className="flex-1">
-//               <h2 className="text-lg font-semibold">{admin.name}</h2>
-//               <p className="text-sm text-gray-200">{admin.email}</p>
-//               <p className="text-sm text-gray-100">Role: {admin.role || "N/A"}</p>
-//               <p className="text-sm text-gray-100">Phone: {admin.phone || "N/A"}</p>
-//               <p className="text-sm text-gray-100">Status: {admin.status}</p>
-//               <p className="text-sm text-gray-100">Joined: {admin.joined}</p>
-//               <p className="text-sm mt-1 italic text-gray-300">{admin.bio}</p>
-//             </div>
-//             <div className="flex flex-col space-y-2">
-//               <button
-//                 onClick={() => handleEdit(admin)}
-//                 className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded transition"
-//               >
-//                 Edit
-//               </button>
-//               <button
-//                 onClick={() => handleDelete(admin.id)}
-//                 className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
-//               >
-//                 Delete
-//               </button>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminDetails;
-
-
-
-// import React, { useState } from "react";
-
-// const defaultAvatar = "https://www.svgrepo.com/show/382106/user-avatar-default.svg";
-
-// const AdminDetails = () => {
-//   const [admins, setAdmins] = useState([
-//     {
-//       id: 1,
-//       name: "Alice Johnson",
-//       email: "alice@example.com",
-//       role: "Super Admin",
-//       phone: "+1 (555) 123-4567",
-//       status: "Active",
-//       joined: "2023-01-15",
-//       bio: "Alice oversees all building operations and user management.",
-//       avatar: "https://i.pravatar.cc/150?img=32",
-//     },
-//     {
-//       id: 2,
-//       name: "Bob Smith",
-//       email: "bob@example.com",
-//       role: "Building Admin",
-//       phone: "+1 (555) 987-6543",
-//       status: "Inactive",
-//       joined: "2022-07-22",
-//       bio: "Bob manages day-to-day inventory and maintenance requests.",
-//       avatar: "https://i.pravatar.cc/150?img=12",
-//     },
-//     {
-//       id: 3,
-//       name: "Carla Reyes",
-//       email: "carla.reyes@example.com",
-//       role: "Security Admin",
-//       phone: "+1 (555) 765-4321",
-//       status: "Active",
-//       joined: "2023-03-10",
-//       bio: "Carla is responsible for building security and access control.",
-//       avatar: "https://i.pravatar.cc/150?img=45",
-//     },
-//   ]);
-
-//   const [selectedAdmin, setSelectedAdmin] = useState(null);
-
-//   return (
-//     <div className="px-4 py-6">
-//       <h1 className="text-2xl font-bold mb-6">Admin Details</h1>
-
-//       {/* Admin Cards */}
-//       <div className="grid gap-6 md:grid-cols-2">
-//         {admins.map((admin) => (
-//           <div
-//             key={admin.id}
-//             onClick={() => setSelectedAdmin(admin)}
-//             className="cursor-pointer p-4 bg-white/30 backdrop-blur rounded-2xl shadow-md hover:shadow-lg transition flex items-center space-x-4 border border-gray-300"
-//           >
-//             <img
-//               src={admin.avatar || defaultAvatar}
-//               alt={`${admin.name}'s avatar`}
-//               className="w-16 h-16 rounded-full object-cover border"
-//             />
-//             <div>
-//               <h2 className="text-lg font-semibold">{admin.name}</h2>
-//               <p className="text-sm text-gray-600">{admin.role}</p>
-//               <p className="text-sm text-gray-800 font-medium">
-//                 Status: <span className={admin.status === "Active" ? "text-green-600" : "text-red-600"}>{admin.status}</span>
-//               </p>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Modal */}
-//       {selectedAdmin && (
-//         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-//           <div className="bg-gray-900 rounded-xl shadow-lg w-full max-w-md p-6 relative">
-//             <button
-//               className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
-//               onClick={() => setSelectedAdmin(null)}
-//             >
-//               ×
-//             </button>
-//             <div className="flex items-center space-x-4 mb-4">
-//               <img
-//                 src={selectedAdmin.avatar || defaultAvatar}
-//                 alt="avatar"
-//                 className="w-20 h-20 rounded-full object-cover border"
-//               />
-//               <div>
-//                 <h2 className="text-xl font-bold">{selectedAdmin.name}</h2>
-//                 <p className="text-sm text-gray-600">{selectedAdmin.role}</p>
-//               </div>
-//             </div>
-//             <div className="space-y-1 text-sm">
-//               <p><strong>Email:</strong> {selectedAdmin.email}</p>
-//               <p><strong>Phone:</strong> {selectedAdmin.phone}</p>
-//               <p><strong>Status:</strong> {selectedAdmin.status}</p>
-//               <p><strong>Joined:</strong> {selectedAdmin.joined}</p>
-//               <p><strong>Bio:</strong> <span className="italic">{selectedAdmin.bio}</span></p>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AdminDetails;
-
-
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "../components/ui/Card";
+import { X, Upload, Eye, EyeOff } from "lucide-react";
+import { cn } from "../utils/cn";
 
 const defaultAvatar = "https://www.svgrepo.com/show/382106/user-avatar-default.svg";
 
 const AdminDetails = () => {
-  const [admins] = useState([
+  const [admins, setAdmins] = useState([
     {
-      id: 1,
+      id: 101,
       name: "Alice Johnson",
       email: "alice@example.com",
+      password: "secret123",
       role: "Super Admin",
       phone: "+1 (555) 123-4567",
       status: "Active",
@@ -399,23 +26,25 @@ const AdminDetails = () => {
       avatar: "https://i.pravatar.cc/150?img=32",
     },
     {
-      id: 2,
+      id: 102,
       name: "Bob Smith",
       email: "bob@example.com",
+      password: "bobpass456",
       role: "Building Admin",
       phone: "+1 (555) 987-6543",
-      status: "Inactive",
+      status: "Active",
       joined: "2022-07-22",
       bio: "Bob manages day-to-day inventory and maintenance requests.",
       avatar: "https://i.pravatar.cc/150?img=12",
     },
     {
-      id: 3,
+      id: 103,
       name: "Carla Reyes",
       email: "carla.reyes@example.com",
+      password: "carla789",
       role: "Security Admin",
       phone: "+1 (555) 765-4321",
-      status: "Active",
+      status: "Inactive",
       joined: "2023-03-10",
       bio: "Carla is responsible for building security and access control.",
       avatar: "https://i.pravatar.cc/150?img=45",
@@ -423,113 +52,343 @@ const AdminDetails = () => {
   ]);
 
   const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    id: "",
+    email: "",
+    password: "",
+    phone: "",
+    profileFile: null,
+  });
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Handle Esc key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && selectedAdmin) {
+        setSelectedAdmin(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedAdmin]);
+
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "profileFile") {
+      setFormData((prev) => ({ ...prev, profileFile: files[0] || null }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleClear = () => {
+    setFormData({
+      name: "",
+      id: "",
+      email: "",
+      password: "",
+      phone: "",
+      profileFile: null,
+    });
+    setShowPassword(false);
+  };
+
+  const handleAddAdmin = () => {
+    if (
+      !formData.name ||
+      !formData.id ||
+      !formData.email ||
+      !formData.password ||
+      !formData.phone
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    // Validate unique ID
+    if (admins.some((admin) => admin.id === Number(formData.id))) {
+      alert("Admin ID must be unique.");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    const newAdmin = {
+      id: Number(formData.id),
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: "Building Admin",
+      phone: formData.phone,
+      status: "Active",
+      joined: new Date().toISOString().split("T")[0],
+      bio: "",
+      avatar: formData.profileFile
+        ? URL.createObjectURL(formData.profileFile)
+        : defaultAvatar,
+    };
+
+    setAdmins((prev) => [...prev, newAdmin]);
+    setShowForm(false);
+    handleClear();
+  };
 
   return (
     <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Details</h1>
-
-      {/* Admin Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {admins.map((admin) => (
-          <div
-            key={admin.id}
-            onClick={() => setSelectedAdmin(admin)}
-            className="cursor-pointer p-4 bg-white/30 backdrop-blur rounded-2xl shadow-md border border-gray-300 transition transform hover:-translate-y-1 hover:shadow-lg flex items-center space-x-4"
-          >
-            <img
-              src={admin.avatar || defaultAvatar}
-              alt={`${admin.name}'s avatar`}
-              className="w-16 h-16 rounded-full object-cover border"
-            />
-            <div>
-              <h2 className="text-lg font-semibold">{admin.name}</h2>
-              <p className="text-sm text-gray-600">{admin.role}</p>
-              <p className="text-sm text-gray-800 font-medium">
-                Status:{" "}
-                <span
-                  className={
-                    admin.status === "Active" ? "text-green-600" : "text-red-600"
-                  }
-                >
-                  {admin.status}
-                </span>
-              </p>
-            </div>
-          </div>
-        ))}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Admin Details
+        </h1>
+        <button
+          onClick={() => {
+            setShowForm(true);
+            setSelectedAdmin(null);
+          }}
+          className="cursor-pointer rounded-xl bg-white/10 border border-white/20 px-4 py-2 text-white backdrop-blur-sm shadow-md hover:bg-white/20 transition"
+        >
+          + Add Admin User
+        </button>
       </div>
 
-      {/* Modal */}
-      {selectedAdmin && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-          <div className="bg-gray-600 rounded-xl shadow-xl w-full max-w-md p-6 relative animate-fadeIn">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl"
-              onClick={() => setSelectedAdmin(null)}
+      {showForm ? (
+        <Card className="max-w-lg mx-auto p-6 rounded-2xl bg-white/10 text-white border border-white/20 shadow-lg backdrop-blur-md">
+          <CardHeader>
+            <CardTitle>Add Admin User</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddAdmin();
+              }}
+              className="space-y-4"
             >
-              ×
-            </button>
-            <div className="flex flex-col items-center text-center mb-6">
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="name">
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Full Name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="id">
+                  Admin ID
+                </label>
+                <input
+                  id="id"
+                  name="id"
+                  type="number"
+                  value={formData.id}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Admin ID"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="email">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Email"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <label className="block mb-1 font-semibold" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 pr-10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-white hover:text-white/80"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="phone">
+                  Phone
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Phone"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="profileFile">
+                  Profile Upload
+                </label>
+                <label
+                  htmlFor="profileFile"
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-white hover:bg-white/20 transition"
+                >
+                  <Upload className="h-5 w-5" />
+                  {formData.profileFile ? formData.profileFile.name : "Attach file"}
+                </label>
+                <input
+                  type="file"
+                  id="profileFile"
+                  name="profileFile"
+                  accept="image/*"
+                  onChange={handleInputChange}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="rounded-lg bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition"
+                >
+                  Clear
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700 transition"
+                >
+                  Add Admin
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 mt-4">
+          {admins.map((admin) => (
+            <Card
+              key={admin.id}
+              onClick={() => setSelectedAdmin(admin)}
+              className="flex items-center space-x-4 p-4 cursor-pointer backdrop-blur-sm bg-white/10 border border-white/20 text-white rounded-xl shadow-md hover:shadow-lg transition"
+            >
               <img
-                src={selectedAdmin.avatar || defaultAvatar}
-                alt="avatar"
-                className="w-24 h-24 rounded-full object-cover border mb-3"
+                src={admin.avatar || defaultAvatar}
+                alt={`${admin.name}'s avatar`}
+                className="w-14 h-14 rounded-full object-cover border"
               />
-              <h2 className="text-2xl font-bold">{selectedAdmin.name}</h2>
-              <p className="text-sm text-gray-500">{selectedAdmin.role}</p>
-            </div>
-            <div className="space-y-4 text-left text-sm">
               <div>
-                <h4 className="font-semibold text-white-700">Email</h4>
-                <p>{selectedAdmin.email}</p>
+                <h3 className="text-lg font-semibold">{admin.name}</h3>
+                <p className="text-sm text-white/70">ID: {admin.id}</p>
               </div>
-              <div>
-                <h4 className="font-semibold text-white-700">Phone</h4>
-                <p>{selectedAdmin.phone}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-white-700">Status</h4>
-                <p>{selectedAdmin.status}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-white-700">Joined</h4>
-                <p>{selectedAdmin.joined}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-white-700">Bio</h4>
-                <p className="italic">{selectedAdmin.bio}</p>
-              </div>
-              <button
-                className="w-full mt-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-                onClick={() => setSelectedAdmin(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Animation Styles */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out forwards;
-        }
-      `}</style>
+      {selectedAdmin && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
+          onClick={() => setSelectedAdmin(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-modal-title"
+        >
+          <div
+            className={cn(
+              "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
+              "shadow-lg shadow-black/10 dark:shadow-white/10",
+              "bg-white/10 dark:bg-white/10 backdrop-blur-md",
+              "border border-white/20 ring-1 ring-white/20",
+              "text-white transition-colors duration-300",
+              "max-h-[90vh] overflow-auto"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-4 right-4 text-white hover:text-red-400"
+              onClick={() => setSelectedAdmin(null)}
+              aria-label="Close modal"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="text-center space-y-2">
+              <img
+                src={selectedAdmin.avatar || defaultAvatar}
+                alt={`${selectedAdmin.name}'s avatar`}
+                className="w-24 h-24 rounded-full object-cover mx-auto border"
+              />
+              <h2 id="admin-modal-title" className="text-xl font-bold">
+                {selectedAdmin.name}
+              </h2>
+              <p className="text-sm text-white/80">ID: {selectedAdmin.id}</p>
+            </div>
+
+            <div className="mt-6 space-y-4 text-sm">
+              <div>
+                <h4 className="font-semibold text-white/70">Email</h4>
+                <p>{selectedAdmin.email}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-white/70">Password</h4>
+                <p className="tracking-widest">••••••••</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-white/70">Phone</h4>
+                <p>{selectedAdmin.phone}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setSelectedAdmin(null)}
+              className="mt-6 w-full py-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default AdminDetails;
-
-
