@@ -120,22 +120,22 @@ const generateFloor = (floorId) => {
   if (floorId === 2) {
     // 2nd Floor: Left Wing (Hall 1), Center (Corridor), Right Wing (Hall 2)
     halls.push(generateHall(floorId, 1, "Left Wing", ["Hall 1"])); // Hall 1
-    halls.push(generateHall(floorId, 2, "Center", ["Corridor"])); // Corridor
+    halls.push(generateHall(floorId, 2, "Corridor", ["Front Side", "Back Side"])); // Corridor
     halls.push(generateHall(floorId, 3, "Right Wing", ["Hall 2"])); // Hall 2
   } else if (floorId === 3) {
     // 3rd Floor: Left Wing (Bays), Center (Outdoor), Right Wing (Office)
     halls.push(generateHall(floorId, 1, "Left Wing", ["Bay 1", "Bay 2", "Bay 3", "Bay 4", "Bay 5"])); // Bays
-    halls.push(generateHall(floorId, 2, "Outdoor", ["Front Side", "Back Side"])); // Outdoor
+    halls.push(generateHall(floorId, 2, "Corridor", ["Front Side", "Back Side"])); // Outdoor
     halls.push(generateHall(floorId, 3, "Right Wing", ["Work Place", "Conference Hall", "CEO Cabin", "Panel 1", "Panel 2", "IOT Lab"])); // Office
   } else if (floorId === 4) {
     // 4th Floor: Left Wing (Hall 2), Center (Corridor), Right Wing (Hall 1)
     halls.push(generateHall(floorId, 1, "Left Wing", ["Hall 2"])); // Hall 2
-    halls.push(generateHall(floorId, 2, "Center", ["Corridor"])); // Corridor
+    halls.push(generateHall(floorId, 2, "Corridor",["Front Side", "Back Side"])); // Corridor
     halls.push(generateHall(floorId, 3, "Right Wing", ["Hall 1"])); // Hall 1
   } else if (floorId === 5) {
     // 5th Floor: Left Wing (Bay 1), Center (Corridor), Right Wing (Bay 2, Server Room)
     halls.push(generateHall(floorId, 1, "Left Wing", ["Bay 1"])); // Bay 1
-    halls.push(generateHall(floorId, 2, "Center", ["Corridor"])); // Corridor
+    halls.push(generateHall(floorId, 2, "Corridor", ["Front Side", "Back Side"])); // Corridor
     halls.push(generateHall(floorId, 3, "Right Wing", ["Bay 2", "Server Room"])); // Bay 2, Server Room
   }
 

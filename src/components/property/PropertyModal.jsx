@@ -1,16 +1,23 @@
+ 
+
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const propertyIcons = {
+
   monitor: <Monitor className="h-8 w-8" />,
   keyboard: <Keyboard className="h-8 w-8" />,
   mouse: <Mouse className="h-8 w-8" />,
   fan: <Fan className="h-8 w-8" />,
   light: <Lightbulb className="h-8 w-8" />,
-  router: <Wifi className="h-8 w-8" />,
+  "wifi-router": <Wifi className="h-8 w-8" />,
   ac: <AirVent className="h-8 w-8" />,
+
+  
+
 };
 
 export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) => {
@@ -41,7 +48,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
     setIsEditing(false);
   };
 
-  return (
+  const modalContent = (
     <>
       {enableEdit && (
         <style>
@@ -69,96 +76,106 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
           `}
         </style>
       )}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 animate-fade-in">
+      <div className="fixed inset-0 z-[1000] w-[100vw] h-[100vh] flex items-center justify-center bg-black/60 animate-fade-in">
         <div 
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-auto animate-slide-up"
+          className={cn(
+            "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
+            "shadow-lg shadow-black/10 dark:shadow-white/10",
+            "bg-white/10 dark:bg-white/10 backdrop-blur-md",
+            "border border-white/20 ring-1 ring-white/20",
+            "text-white transition-colors duration-300",
+            "max-h-[90vh] overflow-auto"
+          )}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <div className="flex justify-between items-center border-b border-white/20 pb-3">
+            <h2 className="text-lg sm:text-xl font-semibold">
               Property Details
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+              className="text-white/80 hover:text-white hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
+              aria-label="Close"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
           
-          <div className={cn("p-4", !enableEdit && "pb-2")}>
-            <div className="flex items-center mb-6">
+          <div className="pt-4 pb-2 sm:pb-4 space-y-4 sm:space-y-6">
+            <div className="flex items-center justify-start mb-4 sm:mb-6">
               <div className={cn(
-                "p-4 rounded-full mr-4",
+                "p-3 sm:p-4 rounded-full mr-3 sm:mr-4",
                 property.status === 'working' 
-                  ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400' 
-                  : 'bg-error-100 dark:bg-error-900 text-error-600 dark:text-error-400'
+                  ? 'bg-primary-100/20 dark:bg-primary-900/20 text-primary-400' 
+                  : 'bg-error-100/20 dark:bg-error-900/20 text-error-400'
               )}>
                 {propertyIcons[property.type]}
               </div>
               
               <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-medium">
                   {formatType(property.type)}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs sm:text-sm text-white/80">
                   {property.brand} {property.model}
                 </p>
               </div>
             </div>
             
-            <div className="space-y-4">
-              <div className={cn(enableEdit && "field-container")}>
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Status
-                </h4>
-                {enableEdit && isEditing ? (
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="border rounded p-1 w-32 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="working">Working</option>
-                    <option value="not-working">Not Working</option>
-                  </select>
-                ) : (
-                  <div className={cn(
-                    "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-32",
-                    property.status === 'working' 
-                      ? 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300' 
-                      : 'bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300'
-                  )}>
-                    {property.status === 'working' ? 'Working' : 'Not Working'}
+            <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
+                    Brand
+                  </h4>
+                  <p className="text-sm sm:text-base">{property.brand}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
+                    Model
+                  </h4>
+                  <p className="text-sm sm:text-base">{property.model}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {property.purchaseDate && (
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
+                      Purchase Date
+                    </h4>
+                    <p className="text-sm sm:text-base">{property.purchaseDate}</p>
                   </div>
                 )}
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Brand
-                </h4>
-                <p className="text-gray-900 dark:text-white">{property.brand}</p>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Model
-                </h4>
-                <p className="text-gray-900 dark:text-white">{property.model}</p>
-              </div>
-              
-              {property.purchaseDate && (
-                <div>
+                <div className={cn(enableEdit && "field-container")}>
                   <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Purchase Date
+                    Status
                   </h4>
-                  <p className="text-gray-900 dark:text-white">{property.purchaseDate}</p>
+                  {enableEdit && isEditing ? (
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="border rounded p-1 w-32 dark:bg-gray-700 dark:text-white "
+                    >
+                      <option value="working">Working</option>
+                      <option value="not-working">Not Working</option>
+                    </select>
+                  ) : (
+                    <div className={cn(
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-32",
+                      property.status === 'working' 
+                        ? 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300' 
+                        : 'bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300'
+                    )}>
+                      {property.status === 'working' ? 'Working' : 'Not Working'}
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              <div className={cn(enableEdit && "field-container", !enableEdit && "mb-0")}>
-                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+              </div>
+
+              <div className={cn(enableEdit && "field-container")}>
+                <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
                   Notes
                 </h4>
                 {enableEdit && isEditing ? (
@@ -166,10 +183,10 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     name="notes"
                     value={formData.notes}
                     onChange={handleInputChange}
-                    className="border rounded p-1 w-full h-20 dark:bg-gray-700 dark:text-white"
+                    className="border border-white/20 rounded p-2 w-full h-18 bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-primary-400"
                   />
                 ) : (
-                  <p className="text-gray-900 dark:text-white w-full min-h-10 max-h-20 overflow-auto">
+                  <p className="text-sm sm:text-base min-h-10 max-h-20 overflow-auto">
                     {property.notes || 'N/A'}
                   </p>
                 )}
@@ -178,22 +195,22 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
           </div>
           
           <div className={cn(
-            "border-t border-gray-200 dark:border-gray-700 flex",
-            enableEdit ? "justify-between p-4" : "justify-end p-4 !pb-0"
+            "border-t border-white/20 flex",
+            enableEdit ? "justify-between pt-4 pb-2 sm:pb-4" : "justify-end pt-4 pb-2 sm:pb-4"
           )}>
             {enableEdit && isEditing ? (
               <>
                 <Button 
                   variant="outline" 
                   onClick={() => setIsEditing(false)}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
+                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
                   Cancel
                 </Button>
                 <Button 
                   variant="primary" 
                   onClick={handleSave}
-                  className="hover:bg-primary-700 dark:hover:bg-primary-600 transform hover:scale-105 transition-all duration-300 ease-in-out"
+                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
                   Save
                 </Button>
@@ -204,7 +221,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                   <Button 
                     variant="outline" 
                     onClick={handleEdit}
-                    className="hover:bg-gray-100 dark:hover:bg-gray-700 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
+                    className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
                   >
                     Edit
                   </Button>
@@ -212,7 +229,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                 <Button 
                   variant="outline" 
                   onClick={onClose}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
+                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
                   Done
                 </Button>
@@ -223,4 +240,6 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body);
 };

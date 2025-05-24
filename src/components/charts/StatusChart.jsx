@@ -41,7 +41,7 @@ export const StatusChart = ({ properties }) => {
   };
 
   return (
-    <div className="h-64 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="h-80 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-base font-medium mb-2 text-gray-900 dark:text-white">Property Status</h3>
       {properties.length > 0 ? (
         <ResponsiveContainer width="100%" height="90%">
