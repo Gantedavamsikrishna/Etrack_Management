@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Building2, Gauge, LampDesk, Layers, Map } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -72,99 +70,95 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <>
+      {/* Overlay for mobile when sidebar is open */}
       {isOpen && (
         <div
-          className="fixed top-16 left-0 right-0 bottom-0 bg-black bg-opacity-40 z-[40]"
+          className="fixed inset-0 bg-black bg-opacity-40 z-[40] lg:hidden"
           onClick={onClose}
-        ></div>
+        />
       )}
 
+      {/* Sidebar */}
       <div
         className={cn(
-          ' fixed inset-y-0 left-0 z-[50] w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 pt-16 flex flex-col transition-transform duration-300 ease-in-out transform',
-          isOpen ? 'translate-x-0 visible opacity-100' : '-translate-x-full invisible opacity-0',
-          'lg:translate-x-0 lg:visible lg:opacity-100 lg:block lg:z-[30]',
-          'overflow-y-auto',
-          isOpen && 'border-4 border-red-500'
+          'fixed inset-y-0 left-0 z-[50] w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'lg:static lg:block lg:h-screen lg:z-[30]',
+          'overflow-y-auto'
         )}
       >
-        <div className="flex flex-col h-full overflow-hidden">
-          <div className="flex-1 overflow-y-auto pt-5 pb-4">
-            <nav className="flex-1 px-2 space-y-1">
-              <NavItem to="/" icon={<Gauge className="h-5 w-5" />} label="Dashboard" end />
-              <NavItem to="/inventory" icon={<LampDesk className="h-5 w-5" />} label="Inventory" />
-              <NavItem to="/map" icon={<Map className="h-5 w-5" />} label="Building Map" />
+        <div className="flex-1 flex flex-col overflow-y-auto pt-5 pb-4">
+          <nav className="flex-1 px-2 space-y-1">
+            <NavItem to="/" icon={<Gauge className="h-5 w-5" />} label="Dashboard" end />
+            <NavItem to="/inventory" icon={<LampDesk className="h-5 w-5" />} label="Inventory" />
+            <NavItem to="/map" icon={<Map className="h-5 w-5" />} label="Building Map" />
 
-              <div className="pt-4 pb-2">
-                <div className="flex items-center px-4">
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Building
-                  </h3>
-                </div>
+            <div className="pt-4 pb-2">
+              <div className="flex items-center px-4">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Building
+                </h3>
               </div>
-
-              {buildingData.floors.map((floor) => (
-                <React.Fragment key={floor.id}>
-                  <NavItem
-                    to={`/floors/${floor.id}`}
-                    icon={<Building2 className="h-5 w-5" />}
-                    label={floor.name}
-                    hasArrow
-                    isExpanded={expandedFloors[floor.id]}
-                    onToggle={() => toggleFloor(floor.id)}
-                  />
-
-                  {expandedFloors[floor.id] && (
-                    <div className="mt-1 space-y-1 animate-slide-in">
-                      {floor.halls.map((hall) => (
-                        <React.Fragment key={hall.id}>
-                          <NavItem
-                            to={`/floors/${floor.id}/halls/${hall.id}`}
-                            icon={<Layers className="h-4 w-4" />}
-                            label={hall.name}
-                            isChild
-                            hasArrow
-                            isExpanded={expandedHalls[`${floor.id}-${hall.id}`]}
-                            onToggle={() => toggleHall(floor.id, hall.id)}
-                          />
-
-                          {expandedHalls[`${floor.id}-${hall.id}`] && (
-                            <div className="mt-1 space-y-1 animate-slide-in">
-                              {hall.rooms.map((room) => (
-                                <NavItem
-                                  key={room.id}
-                                  to={`/floors/${floor.id}/halls/${hall.id}/rooms/${room.id}`}
-                                  icon={
-                                    <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600" />
-                                  }
-                                  label={room.name}
-                                  isChild
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
-            </nav>
-          </div>
-
-          <div className="py-2">
-            <div className="flex items-center px-4">
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Admin
-              </h3>
             </div>
-          </div>
-          <NavItem
-            to="/admin-details"
-            icon={<LampDesk className="h-5 w-5" />}
-            label="Admin Details"
-          />
+
+            {buildingData.floors.map((floor) => (
+              <React.Fragment key={floor.id}>
+                <NavItem
+                  to={`/floors/${floor.id}`}
+                  icon={<Building2 className="h-5 w-5" />}
+                  label={floor.name}
+                  hasArrow
+                  isExpanded={expandedFloors[floor.id]}
+                  onToggle={() => toggleFloor(floor.id)}
+                />
+                {expandedFloors[floor.id] && (
+                  <div className="mt-1 space-y-1 animate-slide-in">
+                    {floor.halls.map((hall) => (
+                      <React.Fragment key={hall.id}>
+                        <NavItem
+                          to={`/floors/${floor.id}/halls/${hall.id}`}
+                          icon={<Layers className="h-4 w-4" />}
+                          label={hall.name}
+                          isChild
+                          hasArrow
+                          isExpanded={expandedHalls[`${floor.id}-${hall.id}`]}
+                          onToggle={() => toggleHall(floor.id, hall.id)}
+                        />
+                        {expandedHalls[`${floor.id}-${hall.id}`] && (
+                          <div className="mt-1 space-y-1 animate-slide-in">
+                            {hall.rooms.map((room) => (
+                              <NavItem
+                                key={room.id}
+                                to={`/floors/${floor.id}/halls/${hall.id}/rooms/${room.id}`}
+                                icon={<div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600" />}
+                                label={room.name}
+                                isChild
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+
+            <div className="pt-4 pb-2">
+              <div className="flex items-center px-4">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Admin
+                </h3>
+              </div>
+            </div>
+            <NavItem
+              to="/admin-details"
+              icon={<LampDesk className="h-5 w-5" />}
+              label="Admin Details"
+            />
+          </nav>
         </div>
+
         <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Etrack v0.1.0
@@ -174,6 +168,3 @@ export const Sidebar = ({ isOpen, onClose }) => {
     </>
   );
 };
-
-
-
