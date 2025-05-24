@@ -332,6 +332,74 @@ export const Sidebar = ({ isOpen, onClose }) => {
               Etrack v0.1.0
             </div>
           </div>
+
+          
+          {buildingData.floors.map((floor) => (
+            <React.Fragment key={floor.id}>
+              <NavItem
+                to={`/floors/${floor.id}`}
+                icon={<Building2 className="h-5 w-5" />}
+                label={floor.name}
+                hasArrow
+                isExpanded={expandedFloors[floor.id]}
+                onToggle={() => toggleFloor(floor.id)}
+              />
+              
+              {expandedFloors[floor.id] && (
+                <div className="mt-1 space-y-1 animate-slide-in">
+                  {floor.halls.map((hall) => (
+                    <React.Fragment key={hall.id}>
+                      <NavItem
+                        to={`/floors/${floor.id}/halls/${hall.id}`}
+                        icon={<Layers className="h-4 w-4" />}
+                        label={hall.name}
+                        isChild
+                        hasArrow
+                        isExpanded={expandedHalls[`${floor.id}-${hall.id}`]}
+                        onToggle={() => toggleHall(floor.id, hall.id)}
+                      />
+                      
+                      {expandedHalls[`${floor.id}-${hall.id}`] && (
+                        <div className="mt-1 space-y-1 animate-slide-in">
+                          {hall.rooms.map((room) => (
+                            <NavItem
+                              key={room.id}
+                              to={`/floors/${floor.id}/halls/${hall.id}/rooms/${room.id}`}
+                              icon={<div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600" />}
+                              label={room.name}
+                              isChild
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+
+          <div className="py-2">
+          <div className="flex items-center px-4">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Admin
+              </h3>
+          </div>
+      </div>
+
+      <NavItem
+        to="/admin-details"
+        icon={<LampDesk className="h-5 w-5" />}
+        label="Admin Details"
+      />
+
+        </nav>
+      </div>
+
+      <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Etrack v0.1.0
+
         </div>
       </div>
     </>
