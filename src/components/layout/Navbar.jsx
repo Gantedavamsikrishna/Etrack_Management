@@ -171,10 +171,10 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary-500 flex items-center justify-center text-white text-sm sm:text-base">
-                  {user.name.charAt(0)}
+                  {user.name ? user.name.charAt(0) : 'U'}
                 </div>
                 <span className="hidden md:inline-block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {user.name}
+                  {user.name || 'Unknown User'}
                 </span>
               </button>
 
@@ -185,8 +185,8 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
                   )}
                 >
                   <div className="block px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                    <p className="font-medium">{user.name || 'Unknown User'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email || 'No email'}</p>
                   </div>
 
                   <button
@@ -233,7 +233,7 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
       </div>
 
       {/* Profile Modal with Glassy Effect */}
-      {showProfile && (
+      {showProfile && user && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
           <div
             className={cn(
@@ -256,47 +256,47 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
             {/* Profile Initial */}
             <div className="flex flex-col items-center space-y-3 mb-5">
               <div className="h-24 w-24 rounded-full bg-primary-500 flex items-center justify-center text-white text-4xl shadow-xl ring-4 ring-white/40">
-                {user.name?.charAt(0) || 'S'}
+                {user.name ? user.name.charAt(0) : 'U'}
               </div>
-              <h2 className="text-xl font-bold">{user.name || 'Sandhya Korimi'}</h2>
-              <p className="text-sm text-gray-300">{user.role || 'Admin'}</p>
+              <h2 className="text-xl font-bold">{user.name || 'Unknown User'}</h2>
+              <p className="text-sm text-gray-300">{user.role || 'Unknown Role'}</p>
             </div>
 
             {/* Profile Details with Icons */}
-            <div className="w-full flex flex-col items-center space-y-4 text-sm">
-              <div className="flex w-72 items-center">
-                <Mail className="w-4 h-4 mr-2 text-white" />
-                <span className="font-semibold w-28">Email</span>
-                <strong className="mx-1">:</strong>
-                <span>{user.email || 'sandhya@3344'}</span>
+            <div className="w-full flex flex-col items-center space-y-2 text-sm">
+              <div className="grid grid-cols-[1.5rem_6rem_0.75rem_1fr] items-center w-full max-w-[20rem] gap-x-3 gap-y-2 py-1">
+                <Mail className="w-4 h-4 text-white" />
+                <span className="font-semibold text-left">Email</span>
+                <strong className="text-center">:</strong>
+                <span className="text-left truncate">{user.email || 'No email'}</span>
               </div>
 
-              <div className="flex w-72 items-center">
-                <User className="w-4 h-4 mr-2 text-white" />
-                <span className="font-semibold w-28">Username</span>
-                <strong className="mx-1">:</strong>
-                <span>{user.username || 'sandhya_k'}</span>
+              <div className="grid grid-cols-[1.5rem_6rem_0.75rem_1fr] items-center w-full max-w-[20rem] gap-x-3 gap-y-2 py-1">
+                <User className="w-4 h-4 text-white" />
+                <span className="font-semibold text-left">Username</span>
+                <strong className="text-center">:</strong>
+                <span className="text-left truncate">{user.username || 'No username'}</span>
               </div>
 
-              <div className="flex w-72 items-center">
-                <Phone className="w-4 h-4 mr-2 text-white" />
-                <span className="font-semibold w-28">Phone</span>
-                <strong className="mx-1">:</strong>
-                <span>{user.phone || '+91 9876543210'}</span>
+              <div className="grid grid-cols-[1.5rem_6rem_0.75rem_1fr] items-center w-full max-w-[20rem] gap-x-3 gap-y-2 py-1">
+                <Phone className="w-4 h-4 text-white" />
+                <span className="font-semibold text-left">Phone</span>
+                <strong className="text-center">:</strong>
+                <span className="text-left truncate">{user.phone || 'No phone'}</span>
               </div>
 
-              <div className="flex w-72 items-center">
-                <Briefcase className="w-4 h-4 mr-2 text-white" />
-                <span className="font-semibold w-28">Role</span>
-                <strong className="mx-1">:</strong>
-                <span>{user.role || 'Admin'}</span>
+              <div className="grid grid-cols-[1.5rem_6rem_0.75rem_1fr] items-center w-full max-w-[20rem] gap-x-3 gap-y-2 py-1">
+                <Briefcase className="w-4 h-4 text-white" />
+                <span className="font-semibold text-left">Role</span>
+                <strong className="text-center">:</strong>
+                <span className="text-left truncate">{user.role || 'No role'}</span>
               </div>
 
-              <div className="flex w-72 items-center">
-                <MapPin className="w-4 h-4 mr-2 text-white" />
-                <span className="font-semibold w-28">Location</span>
-                <strong className="mx-1">:</strong>
-                <span>{user.location || 'Andhra Pradesh, India'}</span>
+              <div className="grid grid-cols-[1.5rem_6rem_0.75rem_1fr] items-center w-full max-w-[20rem] gap-x-3 gap-y-2 py-1">
+                <MapPin className="w-4 h-4 text-white" />
+                <span className="font-semibold text-left">Location</span>
+                <strong className="text-center">:</strong>
+                <span className="text-left truncate">{user.location || 'No location'}</span>
               </div>
             </div>
 
@@ -430,4 +430,5 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
       )}
     </nav>
   );
+  
 };

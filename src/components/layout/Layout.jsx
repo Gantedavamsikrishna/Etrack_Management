@@ -29,7 +29,7 @@ export const Layout = ({ children }) => {
         <main
           className={cn(
             'flex-1 overflow-auto transition-all duration-300',
-            user ? 'lg:pl-64' : ''
+            user ? 'lg:pl' : ''
           )}
           onClick={handleMainContentClick}
         >
