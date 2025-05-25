@@ -1,4 +1,3 @@
-
 // ****************** Make the sidebar visible in all screens properly  ********************
 
 import React, { useState } from 'react';
