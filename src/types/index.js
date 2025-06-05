@@ -9,9 +9,11 @@ export const PropertyType = {
   AC: 'ac'
 };
 
-/**
- * @typedef {'working' | 'not_working'} PropertyStatus
- */
+// Property status as constants
+export const PropertyStatus = {
+  Working: 'working',
+  NotWorking: 'not_working'
+};
 
 /**
  * @typedef {Object} Property
@@ -19,7 +21,7 @@ export const PropertyType = {
  * @property {string} type
  * @property {string} brand
  * @property {string} model
- * @property {PropertyStatus} status
+ * @property {typeof PropertyStatus[keyof typeof PropertyStatus]} status
  * @property {string} [purchaseDate]
  * @property {string} [notes]
  */

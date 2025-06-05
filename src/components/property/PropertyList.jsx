@@ -47,7 +47,7 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, enableE
       <div className="flex flex-col sm:flex-row sm:items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
         <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-          <select
+          {/* <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -58,7 +58,7 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, enableE
                 {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')} ({propertyCounts[type] || 0})
               </option>
             ))}
-          </select>
+          </select> */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
