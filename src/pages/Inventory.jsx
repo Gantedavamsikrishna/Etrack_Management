@@ -37,7 +37,6 @@ export const Inventory = () => {
     roomId: ''
   });
 
-  // Get all properties with their location info
   const allProperties = buildingData.floors.flatMap(floor => 
     floor.halls.flatMap(hall => 
       hall.rooms.flatMap(room => 
@@ -54,7 +53,6 @@ export const Inventory = () => {
     )
   );
 
-  // Get unique floors, halls, and rooms for dropdowns
   const floors = buildingData.floors;
   const halls = selectedFloor === 'all' 
     ? []
@@ -65,6 +63,8 @@ export const Inventory = () => {
 
   // Apply filters
   const filteredProperties = allProperties.filter((property) => {
+  
+  const preFilteredProperties = allProperties.filter((property) => {
     if (selectedFloor !== 'all' && property.floorId !== parseInt(selectedFloor)) {
       return false;
     }
@@ -75,12 +75,21 @@ export const Inventory = () => {
       return false;
     }
     if (selectedDevice !== '' && property.type !== selectedDevice) {
+    return true;
+  });
+
+  const groupedByType = Object.values(PropertyType).reduce((acc, type) => {
+    acc[type] = preFilteredProperties.filter(p => p.type === type);
+    return acc;
+  }, {});
+
+  const filteredProperties = preFilteredProperties.filter((property) => {
+    if (selectedDevice !== 'all' && property.type !== selectedDevice) {
       return false;
     }
     return true;
   });
 
-  // Format type for display
   const formatType = (type) => {
     return type
       .split('-')
@@ -232,7 +241,6 @@ export const Inventory = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold mb-4">Filters</h2>
         
@@ -637,7 +645,6 @@ export const Inventory = () => {
         </>
       )}
 
-      {/* Property List */}
       <PropertyList 
         properties={filteredProperties} 
         title={`Inventory${
