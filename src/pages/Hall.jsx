@@ -12,7 +12,6 @@ export const Hall = () => {
   const { floorId, hallId } = useParams();
   const navigate = useNavigate();
 
-  // Find hall data
   const floor = buildingData.floors.find((f) => f.id === Number(floorId));
   const hall = floor?.halls.find((h) => h.id === Number(hallId));
 
@@ -30,22 +29,18 @@ export const Hall = () => {
     );
   }
 
-  // Get all properties in this hall
   const allProperties = hall.rooms.flatMap(room => room.properties);
   
-  // Calculate summary stats
   const totalProperties = allProperties.length;
   const workingProperties = allProperties.filter(p => p.status === 'working').length;
   const notWorkingProperties = allProperties.filter(p => p.status === 'not_working').length;
 
-  // Handle room card click
   const handleRoomClick = (roomId) => {
     navigate(`/floors/${floorId}/halls/${hallId}/rooms/${roomId}`);
   };
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <nav className="flex items-center text-sm font-medium">
         <Link 
           to="/" 
@@ -73,7 +68,6 @@ export const Hall = () => {
         </p>
       </div>
 
-      {/* Hall summary stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Rooms</p>
@@ -100,7 +94,6 @@ export const Hall = () => {
         </div>
       </div>
 
-      {/* Charts section */}
       {totalProperties > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
@@ -112,7 +105,6 @@ export const Hall = () => {
         </div>
       )}
 
-      {/* Rooms in this hall */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Rooms
@@ -169,7 +161,6 @@ export const Hall = () => {
         </div>
       </div>
 
-      {/* Room comparison chart */}
       {hall.rooms.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -179,7 +170,6 @@ export const Hall = () => {
         </div>
       )}
 
-      {/* All properties in this hall */}
       {totalProperties > 0 && (
         <PropertyList 
           properties={allProperties} 

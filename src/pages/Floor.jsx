@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Layers } from 'lucide-react';
@@ -11,7 +12,6 @@ export const Floor = () => {
   const { floorId } = useParams();
   const navigate = useNavigate();
 
-  // Find floor data
   const floor = buildingData.floors.find((f) => f.id === Number(floorId));
 
   if (!floor) {
@@ -28,24 +28,20 @@ export const Floor = () => {
     );
   }
 
-  // Get all properties on this floor
   const allProperties = floor.halls.flatMap(hall => 
     hall.rooms.flatMap(room => room.properties)
   );
   
-  // Calculate summary stats
   const totalProperties = allProperties.length;
   const workingProperties = allProperties.filter(p => p.status === 'working').length;
   const notWorkingProperties = allProperties.filter(p => p.status === 'not_working').length;
 
-  // Handle hall card click
   const handleHallClick = (hallId) => {
     navigate(`/floors/${floorId}/halls/${hallId}`);
   };
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <nav className="flex items-center text-sm font-medium">
         <Link 
           to="/" 
@@ -66,7 +62,6 @@ export const Floor = () => {
         </p>
       </div>
 
-      {/* Floor summary stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Halls</p>
@@ -114,7 +109,6 @@ export const Floor = () => {
         </div>
       </div>
 
-      {/* Charts section */}
       {totalProperties > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
@@ -126,7 +120,6 @@ export const Floor = () => {
         </div>
       )}
 
-      {/* Halls in this floor */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Halls
@@ -190,7 +183,6 @@ export const Floor = () => {
         </div>
       </div>
 
-      {/* Hall comparison chart */}
       {floor.halls.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
