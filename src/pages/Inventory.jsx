@@ -63,8 +63,6 @@ export const Inventory = () => {
 
   // Apply filters
   const filteredProperties = allProperties.filter((property) => {
-  
-  const preFilteredProperties = allProperties.filter((property) => {
     if (selectedFloor !== 'all' && property.floorId !== parseInt(selectedFloor)) {
       return false;
     }
@@ -75,20 +73,15 @@ export const Inventory = () => {
       return false;
     }
     if (selectedDevice !== '' && property.type !== selectedDevice) {
-    return true;
-  });
-
-  const groupedByType = Object.values(PropertyType).reduce((acc, type) => {
-    acc[type] = preFilteredProperties.filter(p => p.type === type);
-    return acc;
-  }, {});
-
-  const filteredProperties = preFilteredProperties.filter((property) => {
-    if (selectedDevice !== 'all' && property.type !== selectedDevice) {
       return false;
     }
     return true;
   });
+
+  const groupedByType = Object.values(PropertyType).reduce((acc, type) => {
+    acc[type] = filteredProperties.filter(p => p.type === type);
+    return acc;
+  }, {});
 
   const formatType = (type) => {
     return type
@@ -288,7 +281,7 @@ export const Inventory = () => {
                 setSelectedDevice('');
               }}
               disabled={selectedFloor === 'all'}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+              className="w-full px-3 py-2 border border-gray-8 border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
             >
               <option value="all">All Halls/Wings</option>
               {halls.map(hall => (
