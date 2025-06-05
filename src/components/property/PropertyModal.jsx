@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
@@ -18,7 +17,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     status: property.status || 'working',
-    notes: property.notes || '',
+    barcode: property.barcode || '',
   });
 
   const formatType = (type) => {
@@ -51,13 +50,13 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
               transition: all 0.3s ease-in-out;
             }
             .field-container select,
-            .field-container textarea,
+            .field-container input,
             .field-container div,
             .field-container p {
               transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
             }
             .field-container select,
-            .field-container textarea {
+            .field-container input {
               opacity: ${isEditing ? 1 : 0};
               transform: ${isEditing ? 'translateY(0)' : 'translateY(10px)'};
             }
@@ -99,9 +98,9 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
             <div className="flex items-center justify-start mb-4 sm:mb-6">
               <div className={cn(
                 "p-3 sm:p-4 rounded-full mr-3 sm:mr-4",
-                property.status === 'working' 
-                  ? 'bg-primary-100/20 dark:bg-primary-900/20 text-primary-400' 
-                  : 'bg-error-100/20 dark:bg-error-900/20 text-error-400'
+                (isEditing ? formData.status : property.status) === 'working' 
+                  ? 'bg-green-100/20 dark:bg-green-900/20 text-green-400' 
+                  : 'bg-red-100/20 dark:bg-red-900/20 text-red-400'
               )}>
                 {propertyIcons[property.type]}
               </div>
@@ -150,19 +149,19 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-primary-400"
+                      className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-blue-400"
                     >
                       <option value="working">Working</option>
-                      <option value="not-working">Not Working</option>
+                      <option value="not_working">Not Working</option>
                     </select>
                   ) : (
                     <div className={cn(
                       "inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium w-full max-w-[120px] sm:max-w-[140px]",
-                      property.status === 'working' 
-                        ? 'bg-success-100/20 text-success-400 dark:bg-success-900/20 dark:text-success-400' 
-                        : 'bg-error-100/20 text-error-400 dark:bg-error-900/20 dark:text-error-400'
+                      (isEditing ? formData.status : property.status) === 'working' 
+                        ? 'bg-green-100/20 text-green-600 dark:bg-green-900/20 dark:text-green-400' 
+                        : 'bg-red-100/20 text-red-600 dark:bg-red-900/20 dark:text-red-400'
                     )}>
-                      {property.status === 'working' ? 'Working' : 'Not Working'}
+                      {(isEditing ? formData.status : property.status) === 'working' ? 'Working' : 'Not Working'}
                     </div>
                   )}
                 </div>
@@ -170,20 +169,26 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
 
               <div className={cn(enableEdit && "field-container")}>
                 <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                  Notes
+                  Barcode
                 </h4>
                 {enableEdit && isEditing ? (
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
+                  <input
+                    type="text"
+                    name="barcode"
+                    value={formData.barcode}
                     onChange={handleInputChange}
-                    className="border border-white/20 rounded p-2 w-full h-18 bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-primary-400"
+                    className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-green-400"
                   />
                 ) : (
-                  <p className="text-sm sm:text-base min-h-10 max-h-20 overflow-auto">
-                    {property.notes || 'N/A'}
-                  </p>
+                  <p className="text-sm sm:text-base">{property.barcode || 'N/A'}</p>
                 )}
+              </div>
+
+              <div>
+                <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
+                  Location
+                </h4>
+                <p className="text-sm sm:text-base">{property.location || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -204,7 +209,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                 <Button 
                   variant="primary" 
                   onClick={handleSave}
-                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105 transition-all duration-300 ease-in-out"
+                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-green-500 hover:bg-green-600 text-white transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
                   Save
                 </Button>

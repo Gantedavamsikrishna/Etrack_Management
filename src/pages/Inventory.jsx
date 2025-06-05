@@ -9,7 +9,6 @@ export const Inventory = () => {
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [selectedDevice, setSelectedDevice] = useState('all');
 
-  // Get all properties with their location info
   const allProperties = buildingData.floors.flatMap(floor => 
     floor.halls.flatMap(hall => 
       hall.rooms.flatMap(room => 
@@ -26,7 +25,6 @@ export const Inventory = () => {
     )
   );
 
-  // Get unique floors, halls, and rooms for dropdowns
   const floors = buildingData.floors;
   const halls = selectedFloor === 'all' 
     ? []
@@ -35,7 +33,6 @@ export const Inventory = () => {
     ? []
     : halls.find(h => h.id === parseInt(selectedHall))?.rooms || [];
   
-  // Apply filters for properties (excluding device type for groupedByType)
   const preFilteredProperties = allProperties.filter((property) => {
     if (selectedFloor !== 'all' && property.floorId !== parseInt(selectedFloor)) {
       return false;
@@ -49,13 +46,11 @@ export const Inventory = () => {
     return true;
   });
 
-  // Group by type based on pre-filtered properties
   const groupedByType = Object.values(PropertyType).reduce((acc, type) => {
     acc[type] = preFilteredProperties.filter(p => p.type === type);
     return acc;
   }, {});
 
-  // Apply all filters including device type
   const filteredProperties = preFilteredProperties.filter((property) => {
     if (selectedDevice !== 'all' && property.type !== selectedDevice) {
       return false;
@@ -63,7 +58,6 @@ export const Inventory = () => {
     return true;
   });
 
-  // Format type for display
   const formatType = (type) => {
     return type
       .split('-')
@@ -80,7 +74,6 @@ export const Inventory = () => {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold mb-4">Filters</h2>
         
@@ -189,7 +182,6 @@ export const Inventory = () => {
         </div>
       </div>
 
-      {/* Property List */}
       <PropertyList 
         properties={filteredProperties} 
         title={`Inventory ${

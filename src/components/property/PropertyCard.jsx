@@ -1,12 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-import { 
-  Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent
-} from 'lucide-react';
+import { Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-// Map property types to icons
 const propertyIcons = {
   'monitor': <Monitor className="h-5 w-5" />,
   'keyboard': <Keyboard className="h-5 w-5" />,
@@ -18,9 +15,8 @@ const propertyIcons = {
 };
 
 export const PropertyCard = ({ property, onClick }) => {
-  const { type, brand, model, status } = property;
+  const { type, status, brand } = property;
   
-  // Format type for display
   const formatType = (type) => {
     return type
       .split('-')
@@ -46,8 +42,8 @@ export const PropertyCard = ({ property, onClick }) => {
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
               {formatType(type)}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {brand} {model}
+            <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+              {brand}
             </p>
           </div>
           
