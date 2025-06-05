@@ -18,6 +18,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
   const [formData, setFormData] = useState({
     status: property.status || 'working',
     barcode: property.barcode || '',
+    location: property.location || '',
   });
 
   const formatType = (type) => {
@@ -184,11 +185,21 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                 )}
               </div>
 
-              <div>
+              <div className={cn(enableEdit && "field-container")}>
                 <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
                   Location
                 </h4>
-                <p className="text-sm sm:text-base">{property.location || 'N/A'}</p>
+                {enableEdit && isEditing ? (
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-green-400"
+                  />
+                ) : (
+                  <p className="text-sm sm:text-base">{property.location || 'N/A'}</p>
+                )}
               </div>
             </div>
           </div>
@@ -223,7 +234,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
                   >
                     Edit
-                  </Button>
+                </Button>
                 )}
                 <Button 
                   variant="outline" 
