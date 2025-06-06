@@ -194,25 +194,6 @@ export const Dashboard = () => {
             );
           })}
       </div>
-
-      {mostProblematicType && mostProblematicType.notWorking > 0 && (
-        <Card className="border-l-4 border-warning-500">
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-warning-100 dark:bg-warning-900 text-warning-600 dark:text-warning-400 mr-4">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Attention Required</h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  <span className="font-medium">{formatType(mostProblematicType.type)}</span> has the highest percentage of non-working items 
-                  ({Math.round(mostProblematicType.percentage)}% - {mostProblematicType.notWorking} out of {mostProblematicType.total}).
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

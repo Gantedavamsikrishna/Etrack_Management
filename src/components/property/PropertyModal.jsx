@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom'; // Add this import
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
@@ -42,7 +43,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
     setIsEditing(false);
   };
 
-  return (
+  const modalContent = (
     <>
       {enableEdit && (
         <style>
@@ -234,7 +235,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
                   >
                     Edit
-                </Button>
+                  </Button>
                 )}
                 <Button 
                   variant="outline" 
@@ -250,4 +251,6 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body); // Add this to render the modal into document.body
 };
