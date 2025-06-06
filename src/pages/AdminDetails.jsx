@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   CardTitle,
   CardFooter,
 } from "../components/ui/Card";
-import { X, Upload, Eye, EyeOff } from "lucide-react"; // Icons
+import { X, Upload, Eye, EyeOff } from "lucide-react";
 import { cn } from "../utils/cn";
 
 const defaultAvatar = "https://www.svgrepo.com/show/382106/user-avatar-default.svg";
@@ -53,8 +53,6 @@ const AdminDetails = () => {
 
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [showForm, setShowForm] = useState(false);
-
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     id: "",
@@ -63,8 +61,18 @@ const AdminDetails = () => {
     phone: "",
     profileFile: null,
   });
-
   const [showPassword, setShowPassword] = useState(false);
+
+  // Handle Esc key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && selectedAdmin) {
+        setSelectedAdmin(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedAdmin]);
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -95,7 +103,20 @@ const AdminDetails = () => {
       !formData.password ||
       !formData.phone
     ) {
-      alert("Please fill all fields except Profile.");
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    // Validate unique ID
+    if (admins.some((admin) => admin.id === Number(formData.id))) {
+      alert("Admin ID must be unique.");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert("Please enter a valid email address.");
       return;
     }
 
@@ -113,6 +134,7 @@ const AdminDetails = () => {
         ? URL.createObjectURL(formData.profileFile)
         : defaultAvatar,
     };
+
     setAdmins((prev) => [...prev, newAdmin]);
     setShowForm(false);
     handleClear();
@@ -135,191 +157,157 @@ const AdminDetails = () => {
         </button>
       </div>
 
-      {/* Add Admin Form Modal */}
-      {showForm && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
-          onClick={() => setShowForm(false)}
-        >
-          <Card
-            className="relative max-w-lg w-full p-6 rounded-2xl bg-white/10 text-white border border-white/20 shadow-lg backdrop-blur-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button top-right */}
-            <button
-              className="absolute top-4 right-4 text-white hover:text-red-400"
-              onClick={() => setShowForm(false)}
-              aria-label="Close Add Admin Form"
+      {showForm ? (
+        <Card className="max-w-lg mx-auto p-6 rounded-2xl bg-white/10 text-white border border-white/20 shadow-lg backdrop-blur-md">
+          <CardHeader>
+            <CardTitle>Add Admin User</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddAdmin();
+              }}
+              className="space-y-4"
             >
-              <X className="h-6 w-6" />
-            </button>
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="name">
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Full Name"
+                  required
+                />
+              </div>
 
-            <CardHeader>
-              <CardTitle>Add Admin User</CardTitle>
-            </CardHeader>
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="id">
+                  Admin ID
+                </label>
+                <input
+                  id="id"
+                  name="id"
+                  type="number"
+                  value={formData.id}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Admin ID"
+                  required
+                />
+              </div>
 
-            <CardContent>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddAdmin();
-                }}
-                className="space-y-4"
-              >
-                <div>
-                  <label className="block mb-1 font-semibold" htmlFor="name">
-                    Full Name
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
-                    placeholder="Full Name"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="email">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Email"
+                  required
+                />
+              </div>
 
-                <div>
-                  <label className="block mb-1 font-semibold" htmlFor="id">
-                    Admin ID
-                  </label>
-                  <input
-                    id="id"
-                    name="id"
-                    type="number"
-                    value={formData.id}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
-                    placeholder="Admin ID"
-                    required
-                  />
-                </div>
+              <div className="relative">
+                <label className="block mb-1 font-semibold" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 pr-10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-white hover:text-white/80"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
 
-                <div>
-                  <label className="block mb-1 font-semibold" htmlFor="email">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
-                    placeholder="Email"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="phone">
+                  Phone
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                  placeholder="Phone"
+                  required
+                />
+              </div>
 
-                {/* Password with eye icon */}
-                <div className="relative">
-                  <label
-                    className="block mb-1 font-semibold"
-                    htmlFor="password"
-                  >
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 pr-10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
-                    placeholder="Password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-10 right-3 text-white hover:text-white/80"
-                    tabIndex={-1}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
+              <div>
+                <label className="block mb-1 font-semibold" htmlFor="profileFile">
+                  Profile Upload
+                </label>
+                <label
+                  htmlFor="profileFile"
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-white hover:bg-white/20 transition"
+                >
+                  <Upload className="h-5 w-5" />
+                  {formData.profileFile ? formData.profileFile.name : "Attach file"}
+                </label>
+                <input
+                  type="file"
+                  id="profileFile"
+                  name="profileFile"
+                  accept="image/*"
+                  onChange={handleInputChange}
+                  className="hidden"
+                />
+              </div>
 
-                <div>
-                  <label className="block mb-1 font-semibold" htmlFor="phone">
-                    Phone
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
-                    placeholder="Phone"
-                    required
-                  />
-                </div>
-                {/* Profile Upload with Upload icon */}
-                <div>
-                  <label
-                    className="block mb-1 font-semibold"
-                    htmlFor="profileFile"
-                  >
-                    Profile Upload
-                  </label>
-                  <label
-                    htmlFor="profileFile"
-                    className="flex cursor-pointer items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-white hover:bg-white/20 transition"
-                  >
-                    <Upload className="h-5 w-5" />
-                    {formData.profileFile
-                      ? formData.profileFile.name
-                      : "Attach file"}
-                  </label>
-                  <input
-                    type="file"
-                    id="profileFile"
-                    name="profileFile"
-                    accept="image/*"
-                    onChange={handleInputChange}
-                    className="hidden"
-                  />
-                </div>
-
-                {/* Buttons */}
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={handleClear}
-                    className="rounded-lg bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition"
-                  >
-                    Clear
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700 transition"
-                  >
-                    Add Admin
-                  </button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Show cards only if form not visible */}
-      {!showForm && (
+              <div className="flex justify-between pt-4">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="rounded-lg bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition"
+                >
+                  Clear
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700 transition"
+                >
+                  Add Admin
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
         <div className="grid gap-6 md:grid-cols-2 mt-4">
           {admins.map((admin) => (
             <Card
               key={admin.id}
               onClick={() => setSelectedAdmin(admin)}
-              hover
               className="flex items-center space-x-4 p-4 cursor-pointer backdrop-blur-sm bg-white/10 border border-white/20 text-white rounded-xl shadow-md hover:shadow-lg transition"
             >
               <img
@@ -335,11 +323,14 @@ const AdminDetails = () => {
           ))}
         </div>
       )}
-      {/* Modal popup for admin details */}
+
       {selectedAdmin && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
           onClick={() => setSelectedAdmin(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-modal-title"
         >
           <div
             className={cn(
@@ -355,6 +346,7 @@ const AdminDetails = () => {
             <button
               className="absolute top-4 right-4 text-white hover:text-red-400"
               onClick={() => setSelectedAdmin(null)}
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
@@ -362,10 +354,12 @@ const AdminDetails = () => {
             <div className="text-center space-y-2">
               <img
                 src={selectedAdmin.avatar || defaultAvatar}
-                alt="avatar"
+                alt={`${selectedAdmin.name}'s avatar`}
                 className="w-24 h-24 rounded-full object-cover mx-auto border"
               />
-              <h2 className="text-xl font-bold">{selectedAdmin.name}</h2>
+              <h2 id="admin-modal-title" className="text-xl font-bold">
+                {selectedAdmin.name}
+              </h2>
               <p className="text-sm text-white/80">ID: {selectedAdmin.id}</p>
             </div>
 
@@ -386,7 +380,7 @@ const AdminDetails = () => {
 
             <button
               onClick={() => setSelectedAdmin(null)}
-              className="w-full mt-6 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105  duration-300 rounded-lg"
+              className="mt-6 w-full py-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all"
             >
               Close
             </button>

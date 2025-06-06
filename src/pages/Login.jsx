@@ -3,6 +3,8 @@ import { Laptop2, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,18 +19,54 @@ export const Login = () => {
 
     if (!email || !password) {
       setError('Please enter both email and password.');
+      toast.error('Please enter both email and password.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+      });
       return;
     }
 
     try {
       const success = await login(email, password);
       if (success) {
+        toast.success('Login successful!', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        });
         navigate('/');
       } else {
         setError('Invalid email or password.');
+        toast.error('Invalid email or password.', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        });
       }
     } catch (error) {
       setError('An error occurred during login.');
+      toast.error('An error occurred during login.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+      });
     }
   };
 
@@ -118,6 +156,7 @@ export const Login = () => {
             Log in
           </Button>
         </form>
+        <ToastContainer />
       </div>
     </div>
   );

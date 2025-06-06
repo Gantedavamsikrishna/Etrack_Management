@@ -47,6 +47,11 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       {enableEdit && (
         <style>
           {`
+            body {
+              margin: 0;
+              padding: 0;
+              overflow: hidden; /* Prevents scrolling when modal is open */
+            }
             .field-container {
               transition: all 0.3s ease-in-out;
             }
@@ -70,10 +75,13 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
           `}
         </style>
       )}
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in">
+      <div 
+        className="fixed top-0 left-0 w-screen h-screen z-[1000] bg-black/60 backdrop-blur-md animate-fade-in"
+        onClick={onClose}
+      >
         <div 
           className={cn(
-            "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
+            "relative mx-auto my-4 w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
             "shadow-lg shadow-black/10 dark:shadow-white/10",
             "bg-white/10 dark:bg-white/10 backdrop-blur-md",
             "border border-white/20 ring-1 ring-white/20",
@@ -234,7 +242,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
                   >
                     Edit
-                </Button>
+                  </Button>
                 )}
                 <Button 
                   variant="outline" 
