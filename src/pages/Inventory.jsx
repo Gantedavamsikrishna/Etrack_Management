@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { PropertyList } from '../components/property/PropertyList';
 import { buildingData } from '../data/mockData';
 import { PropertyType, PropertyStatus } from '../types';
@@ -191,6 +192,316 @@ export const Inventory = () => {
     }
   };
 
+  const modalContent = (
+    <>
+      <style>
+        {`
+          .modal-content::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, and Opera */
+          }
+          .modal-content {
+            scrollbar-width: none; /* Firefox */
+            ms-overflow-style: none; /* IE and Edge */
+          }
+          /* Style for the dropdown menu options */
+          select.custom-select option {
+            background-color: #E5E7EB; /* bg-gray-200 */
+            color: #111827; /* text-gray-900 */
+          }
+          select.custom-select option:hover {
+            background-color: #D1D5DB; /* hover:bg-gray-300 */
+          }
+          /* Ensure borders are visible */
+          .custom-border {
+            border: 1px solid rgba(209, 213, 219, 0.4) !important; /* border-gray-300/40 */
+          }
+          @media (prefers-color-scheme: dark) {
+            select.custom-select option {
+              background-color: #1F2937; /* bg-gray-800 */
+              color: #FFFFFF; /* text-white */
+            }
+            select.custom-select option:hover {
+              background-color: #374151; /* hover:bg-gray-700 */
+            }
+            .custom-border {
+              border: 1px solid rgba(255, 255, 255, 0.2) !important; /* border-white/20 */
+            }
+          }
+        `}
+      </style>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-[200] bg-gray-800/60 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
+        onClick={handleBackdropClick}
+      />
+      {/* Modal Content */}
+      <div
+        className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className={cn(
+            'relative w-full max-w-md rounded-2xl p-6',
+            'shadow-lg shadow-black/10 dark:shadow-white/10',
+            'bg-gray-200/30 dark:bg-white/10 backdrop-blur-md',
+            'border border-gray-300/40 dark:border-white/20 ring-1 ring-gray-300/40 dark:ring-white/20',
+            'text-gray-900 dark:text-white transition-colors duration-300',
+            'max-h-[80vh] flex flex-col'
+          )}
+        >
+          <div className="flex justify-between items-center border-b border-gray-300/40 dark:border-white/20 pb-4">
+            <h2 className="text-xl font-bold">Add New Property</h2>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="text-gray-600 dark:text-white/80 hover:text-gray-800 dark:hover:text-white hover:bg-gray-300/20 dark:hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="modal-content overflow-y-auto flex-1 pt-4 pb-4">
+            <div className="flex items-center justify-start mb-6">
+              <div
+                className={cn(
+                  'p-4 rounded-full mr-4',
+                  newProperty.status === PropertyStatus.Working
+                    ? 'bg-green-100/20 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                    : newProperty.status === PropertyStatus.NotWorking
+                    ? 'bg-red-100/20 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    : 'bg-gray-100/20 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400'
+                )}
+              >
+                {newProperty.type ? propertyIcons[newProperty.type] : <Plus className="h-8 w-8" />}
+              </div>
+              <div>
+                <h3 className="text-lg font-medium">
+                  {newProperty.type ? formatType(newProperty.type) : 'New Property'}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-white/80">
+                  {newProperty.brand && newProperty.model
+                    ? `${newProperty.brand} ${newProperty.model}`
+                    : 'Select type to begin'}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Property Name</h4>
+                  <input
+                    type="text"
+                    name="name"
+                    value={newProperty.name}
+                    onChange={handleInputChange}
+                    className="custom-border rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+                    required
+                  />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">ID</h4>
+                  <input
+                    type="text"
+                    name="id"
+                    value={newProperty.id}
+                    onChange={handleInputChange}
+                    className="custom-border rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Brand</h4>
+                  <input
+                    type="text"
+                    name="brand"
+                    value={newProperty.brand}
+                    onChange={handleInputChange}
+                    className="custom-border rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+                    required
+                  />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Model</h4>
+                  <input
+                    type="text"
+                    name="model"
+                    value={newProperty.model}
+                    onChange={handleInputChange}
+                    className="custom-border rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Device Type</h4>
+                  <div className="relative">
+                    <select
+                      name="type"
+                      value={newProperty.type}
+                      onChange={handleInputChange}
+                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
+                      required
+                    >
+                      <option value="">Select Type</option>
+                      {Object.values(PropertyType).map((type) => (
+                        <option key={type} value={type}>
+                          {formatType(type)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Status</h4>
+                  <div className="relative">
+                    <select
+                      name="status"
+                      value={newProperty.status}
+                      onChange={handleInputChange}
+                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
+                      required
+                    >
+                      <option value="">Select Status</option>
+                      {Object.values(PropertyStatus).map((status) => (
+                        <option key={status} value={status}>
+                          {formatType(status)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Purchase Date</h4>
+                  <input
+                    type="date"
+                    name="purchaseDate"
+                    value={newProperty.purchaseDate}
+                    onChange={handleInputChange}
+                    className="custom-border rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Floor</h4>
+                  <div className="relative">
+                    <select
+                      name="floorId"
+                      value={newProperty.floorId}
+                      onChange={(e) =>
+                        setNewProperty({ ...newProperty, floorId: e.target.value, hallId: '', roomId: '' })
+                      }
+                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
+                      required
+                    >
+                      <option value="">Select Floor</option>
+                      {floors.map((floor) => (
+                        <option key={floor.id} value={floor.id}>
+                          {floor.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Hall</h4>
+                  <div className="relative">
+                    <select
+                      name="hallId"
+                      value={newProperty.hallId}
+                      onChange={(e) =>
+                        setNewProperty({ ...newProperty, hallId: e.target.value, roomId: '' })
+                      }
+                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
+                      disabled={!newProperty.floorId}
+                      required
+                    >
+                      <option value="">Select Hall</option>
+                      {newProperty.floorId &&
+                        floors
+                          .find((f) => f.id === parseInt(newProperty.floorId))
+                          ?.halls.map((hall) => (
+                            <option key={hall.id} value={hall.id}>
+                              {hall.name}
+                            </option>
+                          ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Room</h4>
+                  <div className="relative">
+                    <select
+                      name="roomId"
+                      value={newProperty.roomId}
+                      onChange={handleInputChange}
+                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
+                      disabled={!newProperty.hallId}
+                      required
+                    >
+                      <option value="">Select Room</option>
+                      {newProperty.hallId &&
+                        floors
+                          .find((f) => f.id === parseInt(newProperty.floorId))
+                          ?.halls.find((h) => h.id === parseInt(newProperty.hallId))
+                          ?.rooms.map((room) => (
+                            <option key={room.id} value={room.id}>
+                              {room.name}
+                            </option>
+                          ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Notes</h4>
+                <textarea
+                  name="notes"
+                  value={newProperty.notes}
+                  onChange={handleInputChange}
+                  className="custom-border rounded p-3 w-full min-h-[80px] max-h-[120px] bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-300/40 dark:border-white/20 flex justify-end pt-4 gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 text-sm bg-gray-100/20 dark:bg-white/10 hover:bg-gray-200/30 dark:hover:bg-white/20 text-gray-900 dark:text-white border-gray-300/40 dark:border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handlePropertySubmit}
+              className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white transform hover:scale-105 transition-all duration-300 ease-in-out"
+            >
+              Add Property
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -204,11 +515,11 @@ export const Inventory = () => {
           <Button
             variant="primary"
             onClick={() => setIsModalOpen(true)}
-            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-primary-500 hover:bg-primary-600 text-white rounded-md transition-all duration-300 ease-in-out"
+            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
           >
             Add Property
           </Button>
-          <label className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-all duration-300 ease-in-out cursor-pointer">
+          {/* <label className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-purple-400/20 hover:bg-purple-500/30 text-purple-800 border-purple-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
             Bulk Upload
             <input
               type="file"
@@ -216,18 +527,18 @@ export const Inventory = () => {
               className="hidden"
               onChange={handleCSVUpload}
             />
-          </label>
+          </label> */}
           <a
             href="data:text/csv;charset=utf-8,ID,Name,Type,Brand,Model,Status,Purchase Date,Notes,Floor,Hall,Room\nPROP001,Example Monitor,monitor,BrandX,ModelY,working,2023-01-01,Sample note,Floor 1,Hall A,Room 101"
             download="property_template.csv"
-            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-all duration-300 ease-in-out"
+            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
           >
             Download Template
           </a>
           <Button
             variant="outline"
             onClick={downloadCSV}
-            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-md transition-all duration-300 ease-in-out"
+            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-teal-400/20 hover:bg-teal-500/30 text-teal-800 border-teal-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
           >
             Download CSV
           </Button>
@@ -235,7 +546,7 @@ export const Inventory = () => {
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
@@ -254,7 +565,7 @@ export const Inventory = () => {
                 setSelectedRoom('all');
                 setSelectedDevice('');
               }}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Floors</option>
               {floors.map(floor => (
@@ -281,7 +592,7 @@ export const Inventory = () => {
                 setSelectedDevice('');
               }}
               disabled={selectedFloor === 'all'}
-              className="w-full px-3 py-2 border border-gray-8 border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
               <option value="all">All Halls/Wings</option>
               {halls.map(hall => (
@@ -307,9 +618,9 @@ export const Inventory = () => {
                 setSelectedDevice('');
               }}
               disabled={selectedHall === 'all'}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              <option value="all">All Rooms</option>
+              <option value="all">Select Room</option>
               {rooms.map(room => (
                 <option key={room.id} value={room.id}>
                   {room.name}
@@ -329,7 +640,7 @@ export const Inventory = () => {
               id="device-filter"
               value={selectedDevice}
               onChange={(e) => setSelectedDevice(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Device Type</option>
               {Object.values(PropertyType).map((type) => (
@@ -343,300 +654,7 @@ export const Inventory = () => {
       </div>
 
       {/* Add Property Modal */}
-      {isModalOpen && (
-        <>
-          <style>
-            {`
-              .modal-content::-webkit-scrollbar {
-                display: none;
-              }
-              .modal-content {
-                scrollbar-width: none;
-                ms-overflow-style: none;
-              }
-              /* Style for the dropdown menu options */
-              select.custom-select option {
-                background-color: #1F2937; /* bg-gray-800 */
-                color: #FFFFFF; /* text-white */
-              }
-              select.custom-select option:hover {
-                background-color: #374151; /* hover:bg-gray-700 */
-              }
-              /* Ensure borders are visible */
-              .custom-border {
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
-              }
-            `}
-          </style>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/50 animate-fade-in"
-            onClick={handleBackdropClick}
-          />
-          {/* Modal Content */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-            <div
-              className={cn(
-                "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
-                "shadow-lg shadow-black/10 dark:shadow-white/10",
-                "bg-white/10 dark:bg-white/10 backdrop-blur-md",
-                "border border-white/20 ring-1 ring-white/20",
-                "text-white transition-colors duration-300",
-                "max-h-[80vh] flex flex-col"
-              )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center border-b border-white/20 pb-3">
-                <h2 className="text-lg sm:text-xl font-semibold">
-                  Add New Property
-                </h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-white/80 hover:text-white hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
-                  aria-label="Close"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="modal-content overflow-y-auto flex-1 pt-4 pb-2 sm:pb-4">
-                <div className="flex items-center justify-start mb-4 sm:mb-6">
-                  <div className={cn(
-                    "p-3 sm:p-4 rounded-full mr-3 sm:mr-4",
-                    newProperty.status === PropertyStatus.Working 
-                      ? 'bg-primary-100/20 dark:bg-primary-900/20 text-primary-400' 
-                      : newProperty.status === PropertyStatus.NotWorking
-                      ? 'bg-error-100/20 dark:bg-error-900/20 text-error-400'
-                      : 'bg-gray-100/20 dark:bg-gray-900/20 text-gray-400'
-                  )}>
-                    {newProperty.type ? propertyIcons[newProperty.type] : <Plus className="h-8 w-8" />}
-                  </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-medium">
-                      {newProperty.type ? formatType(newProperty.type) : 'New Property'}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/80">
-                      {newProperty.brand && newProperty.model ? `${newProperty.brand} ${newProperty.model}` : 'Select type to begin'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Property Name
-                      </h4>
-                      <input
-                        type="text"
-                        name="name"
-                        value={newProperty.name}
-                        onChange={handleInputChange}
-                        className="custom-border border-1 border-solid border-white/20 rounded p-3 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        ID
-                      </h4>
-                      <input
-                        type="text"
-                        name="id"
-                        value={newProperty.id}
-                        onChange={handleInputChange}
-                        className="custom-border border-1 border-solid border-white/20 rounded p-3 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Brand
-                      </h4>
-                      <input
-                        type="text"
-                        name="brand"
-                        value={newProperty.brand}
-                        onChange={handleInputChange}
-                        className="custom-border border-1 border-solid border-white/20 rounded p-3 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Model
-                      </h4>
-                      <input
-                        type="text"
-                        name="model"
-                        value={newProperty.model}
-                        onChange={handleInputChange}
-                        className="custom-border border-1 border-solid border-white/20 rounded p-3 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Device Type
-                      </h4>
-                      <div className="relative">
-                        <select
-                          name="type"
-                          value={newProperty.type}
-                          onChange={handleInputChange}
-                          className="custom-select custom-border appearance-none border-1 border-solid border-white/20 rounded p-3 w-full bg-white/20 dark:bg-gray-800/50 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out pr-10"
-                          required
-                        >
-                          <option value="">Select Type</option>
-                          {Object.values(PropertyType).map(type => (
-                            <option key={type} value={type}>{formatType(type)}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Status
-                      </h4>
-                      <div className="relative">
-                        <select
-                          name="status"
-                          value={newProperty.status}
-                          onChange={handleInputChange}
-                          className="custom-select custom-border appearance-none border-1 border-solid border-white/20 rounded p-3 w-full bg-white/20 dark:bg-gray-800/50 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out pr-10"
-                          required
-                        >
-                          <option value="">Select Status</option>
-                          {Object.values(PropertyStatus).map(status => (
-                            <option key={status} value={status}>{formatType(status)}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Purchase Date
-                      </h4>
-                      <input
-                        type="date"
-                        name="purchaseDate"
-                        value={newProperty.purchaseDate}
-                        onChange={handleInputChange}
-                        className="custom-border border-1 border-solid border-white/20 rounded p-3 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out"
-                      />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Floor
-                      </h4>
-                      <div className="relative">
-                        <select
-                          name="floorId"
-                          value={newProperty.floorId}
-                          onChange={(e) => setNewProperty({ ...newProperty, floorId: e.target.value, hallId: '', roomId: '' })}
-                          className="custom-select custom-border appearance-none border-1 border-solid border-white/20 rounded p-3 w-full bg-white/20 dark:bg-gray-800/50 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out pr-10"
-                          required
-                        >
-                          <option value="">Select Floor</option>
-                          {floors.map(floor => (
-                            <option key={floor.id} value={floor.id}>{floor.name}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Hall
-                      </h4>
-                      <div className="relative">
-                        <select
-                          name="hallId"
-                          value={newProperty.hallId}
-                          onChange={(e) => setNewProperty({ ...newProperty, hallId: e.target.value, roomId: '' })}
-                          className="custom-select custom-border appearance-none border-1 border-solid border-white/20 rounded p-3 w-full bg-white/20 dark:bg-gray-800/50 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
-                          disabled={!newProperty.floorId}
-                          required
-                        >
-                          <option value="">Select Hall</option>
-                          {newProperty.floorId && floors.find(f => f.id === parseInt(newProperty.floorId))?.halls.map(hall => (
-                            <option key={hall.id} value={hall.id}>{hall.name}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                        Room
-                      </h4>
-                      <div className="relative">
-                        <select
-                          name="roomId"
-                          value={newProperty.roomId}
-                          onChange={handleInputChange}
-                          className="custom-select custom-border appearance-none border-1 border-solid border-white/20 rounded p-3 w-full bg-white/20 dark:bg-gray-800/50 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
-                          disabled={!newProperty.hallId}
-                          required
-                        >
-                          <option value="">Select Room</option>
-                          {newProperty.hallId && halls.find(h => h.id === parseInt(newProperty.hallId))?.rooms.map(room => (
-                            <option key={room.id} value={room.id}>{room.name}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
-                      Notes
-                    </h4>
-                    <textarea
-                      name="notes"
-                      value={newProperty.notes}
-                      onChange={handleInputChange}
-                      className="custom-border border-1 border-solid border-white/20 rounded p-3 w-full min-h-[80px] max-h-[120px] bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all duration-300 ease-in-out resize-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-white/20 flex justify-end pt-4 pb-2 sm:pb-4 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handlePropertySubmit}
-                  className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105 transition-all duration-300 ease-in-out"
-                >
-                  Add Property
-                </Button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {isModalOpen && createPortal(modalContent, document.body)}
 
       <PropertyList 
         properties={filteredProperties} 
