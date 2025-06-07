@@ -14,7 +14,6 @@ import { buildingData } from '../data/mockData';
 import { PropertyType } from '../types';
 
 export const Dashboard = () => {
-  // Calculate summary statistics
   const totalFloors = buildingData.floors.length;
   const totalHalls = buildingData.floors.reduce((acc, floor) => acc + floor.halls.length, 0);
   const totalRooms = buildingData.floors.reduce(
@@ -23,7 +22,6 @@ export const Dashboard = () => {
     ), 0
   );
 
-  // Get all properties
   const allProperties = buildingData.floors.flatMap(floor => 
     floor.halls.flatMap(hall => 
       hall.rooms.flatMap(room => 
@@ -33,17 +31,14 @@ export const Dashboard = () => {
   );
 
   const totalProperties = allProperties.length;
-  
   const workingProperties = allProperties.filter(p => p.status === 'working').length;
   const notWorkingProperties = allProperties.filter(p => p.status === 'not_working').length;
   
-  // Count properties by type
   const propertyTypeCounts = Object.values(PropertyType).reduce((acc, type) => {
     acc[type] = allProperties.filter(p => p.type === type).length;
     return acc;
   }, {});
   
-  // Find type with most issues
   const typesWithIssues = Object.values(PropertyType).map(type => {
     const props = allProperties.filter(p => p.type === type);
     const total = props.length;
@@ -60,7 +55,6 @@ export const Dashboard = () => {
   
   const mostProblematicType = typesWithIssues[0];
   
-  // Format for display
   const formatType = (type) => {
     return type
       .split('-')
@@ -77,7 +71,6 @@ export const Dashboard = () => {
         </p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="col-span-2">
           <CardContent className="p-4 flex items-center">
@@ -162,7 +155,6 @@ export const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Property Status Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5">
           <StatusChart properties={allProperties} />
@@ -173,7 +165,6 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Property Type Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Object.entries(propertyTypeCounts)
           .sort(([, countA], [, countB]) => countB - countA)
@@ -203,26 +194,6 @@ export const Dashboard = () => {
             );
           })}
       </div>
-
-      {/* Issues Highlight */}
-      {mostProblematicType && mostProblematicType.notWorking > 0 && (
-        <Card className="border-l-4 border-warning-500">
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-warning-100 dark:bg-warning-900 text-warning-600 dark:text-warning-400 mr-4">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Attention Required</h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  <span className="font-medium">{formatType(mostProblematicType.type)}</span> has the highest percentage of non-working items 
-                  ({Math.round(mostProblematicType.percentage)}% - {mostProblematicType.notWorking} out of {mostProblematicType.total}).
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
