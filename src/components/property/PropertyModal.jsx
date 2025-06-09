@@ -47,11 +47,6 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       {enableEdit && (
         <style>
           {`
-            body {
-              margin: 0;
-              padding: 0;
-              overflow: hidden; /* Prevents scrolling when modal is open */
-            }
             .field-container {
               transition: all 0.3s ease-in-out;
             }
@@ -76,19 +71,19 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
         </style>
       )}
       <div 
-        className="fixed top-0 left-0 w-screen h-screen z-[1000] bg-black/60 backdrop-blur-md animate-fade-in"
-        onClick={onClose}
+        className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
+        onClick={onClose} // Add onClick here to close modal when clicking outside
       >
         <div 
           className={cn(
-            "relative mx-auto my-4 w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
+            "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
             "shadow-lg shadow-black/10 dark:shadow-white/10",
             "bg-white/10 dark:bg-white/10 backdrop-blur-md",
             "border border-white/20 ring-1 ring-white/20",
             "text-white transition-colors duration-300",
             "max-h-[90vh] overflow-auto"
           )}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()} // Prevent clicks inside modal from closing it
         >
           <div className="flex justify-between items-center border-b border-white/20 pb-3">
             <h2 className="text-lg sm:text-xl font-semibold">
