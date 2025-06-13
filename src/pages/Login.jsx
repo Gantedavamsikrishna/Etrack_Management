@@ -3,71 +3,66 @@ import { Laptop2, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      console.log('Toast triggered: Missing email or password');
       toast.error('Please enter both email and password.', {
         position: "top-right",
         autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        theme: 'dark',
       });
       return;
     }
 
     try {
       const success = await login(email, password);
-      if (success) {
+      console.log('Login response:', success); // Debug the return value
+      if (success?.success || success === true) { // Handle object or boolean
+        console.log('Toast triggered: Login successful');
         toast.success('Login successful!', {
           position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          autoClose: 3000,
+          theme: 'dark',
         });
-        navigate('/');
+        // Delay navigation to ensure toast renders
+        setTimeout(() => {
+          navigate('/');
+        }, 500);
       } else {
-        setError('Invalid email or password.');
+        console.log('Toast triggered: Invalid credentials');
         toast.error('Invalid email or password.', {
           position: "top-right",
           autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          theme: 'dark',
         });
       }
     } catch (error) {
-      setError('An error occurred during login.');
+      console.log('Toast triggered: Login error', error);
       toast.error('An error occurred during login.', {
         position: "top-right",
         autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        theme: 'dark',
       });
     }
+  };
+
+  const testToast = () => {
+    console.log('Toast triggered: Test toast');
+    toast.info('This is a test toast!', {
+      position: "top-right",
+      autoClose: 3000,
+      theme: 'dark',
+    });
   };
 
   return (
@@ -84,12 +79,6 @@ export const Login = () => {
             Property Management System
           </p>
         </div>
-
-        {error && (
-          <div className="bg-error-50 dark:bg-error-900 text-error-800 dark:text-error-300 p-3 rounded-md mb-4 text-sm">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -156,7 +145,13 @@ export const Login = () => {
             Log in
           </Button>
         </form>
-        <ToastContainer />
+
+        <Button
+          onClick={testToast}
+          className="w-full mt-4 bg-gray-500 hover:bg-gray-600"
+        >
+          Test Toast
+        </Button>
       </div>
     </div>
   );

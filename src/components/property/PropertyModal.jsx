@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom'; // Add this import
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
@@ -42,7 +43,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
     setIsEditing(false);
   };
 
-  return (
+  const modalContent = (
     <>
       {enableEdit && (
         <style>
@@ -70,10 +71,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
           `}
         </style>
       )}
-      <div 
-        className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
-        onClick={onClose} // Add onClick here to close modal when clicking outside
-      >
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in">
         <div 
           className={cn(
             "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
@@ -83,7 +81,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
             "text-white transition-colors duration-300",
             "max-h-[90vh] overflow-auto"
           )}
-          onClick={(e) => e.stopPropagation()} // Prevent clicks inside modal from closing it
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center border-b border-white/20 pb-3">
             <h2 className="text-lg sm:text-xl font-semibold">
@@ -253,4 +251,6 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body); // Add this to render the modal into document.body
 };
