@@ -1,5 +1,8 @@
+<<<<<<< HEAD
  
 
+=======
+>>>>>>> fc3c5d9df28f09c43fd8d338adbabd28a872d888
 import React, { useState } from "react";
 import {
   Card,
@@ -62,7 +65,7 @@ const AdminDetails = () => {
     phone: "",
     profileFile: null,
   });
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Initialize to false to hide password and show Eye icon by default
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -82,7 +85,7 @@ const AdminDetails = () => {
       phone: "",
       profileFile: null,
     });
-    setShowPassword(false);
+    setShowPassword(false); // Reset to hide password and show Eye icon
   };
 
   const handleAddAdmin = () => {
@@ -126,9 +129,10 @@ const AdminDetails = () => {
           onClick={() => {
             setShowForm(true);
             setSelectedAdmin(null);
+            setShowPassword(false); // Ensure password is hidden and Eye icon is shown when opening form
           }}
           className="cursor-pointer rounded-xl bg-white/10 border border-white/20 px-4 py-2 text-gray-800 dark:text-white backdrop-blur-sm shadow-md hover:bg-white/20 transition"
-        >
+ the  >
           + Add Admin User
         </button>
       </div>
@@ -136,12 +140,12 @@ const AdminDetails = () => {
       {/* Add Admin Form Modal */}
       {showForm && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
           onClick={() => setShowForm(false)}
         >
           <Card
             className={cn(
-              "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-6",
+              "relative w-full max-w-xs sm:max-w-sm md:max-w-md rounded-xl sm:rounded-2xl p-4 sm:p-6",
               "shadow-lg shadow-black/10 dark:shadow-white/10",
               "bg-white/10 dark:bg-white/10 backdrop-blur-md",
               "border border-white/20 ring-1 ring-white/20",
@@ -150,18 +154,18 @@ const AdminDetails = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-4 right-4 text-white hover:text-red-400"
+              className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
               onClick={() => setShowForm(false)}
               aria-label="Close Add Admin Form"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
 
             <CardHeader>
               <CardTitle className="text-white">Add Admin User</CardTitle>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="space-y-3">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -172,7 +176,7 @@ const AdminDetails = () => {
                 {["name", "id", "email", "password", "phone"].map((field) => (
                   <div key={field} className="relative">
                     <label
-                      className="block mb-1 font-semibold text-white"
+                      className="block mb-1 font-semibold text-gray-800 dark:text-white"
                       htmlFor={field}
                     >
                       {field === "id"
@@ -195,7 +199,7 @@ const AdminDetails = () => {
                       }
                       value={formData[field]}
                       onChange={handleInputChange}
-                      className="w-full rounded-md border border-white/30 bg-transparent px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                      className="w-full rounded-md border border-gray-300 dark:border-white/30 bg-transparent px-3 py-2 text-gray-800 dark:text-white placeholder:text-gray-700 dark:placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-white"
                       placeholder={
                         field === "id"
                           ? "Admin ID"
@@ -207,7 +211,7 @@ const AdminDetails = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-10 right-3 text-white hover:text-white/80"
+                        className="absolute top-10 right-3 text-gray-800 dark:text-white hover:text-blue-400 dark:hover:text-white/80"
                         tabIndex={-1}
                         aria-label={showPassword ? "Hide password" : "Show password"}
                       >
@@ -224,14 +228,14 @@ const AdminDetails = () => {
                 {/* Profile Upload */}
                 <div>
                   <label
-                    className="block mb-1 font-semibold text-white"
+                    className="block mb-1 font-semibold text-gray-800 dark:text-white"
                     htmlFor="profileFile"
                   >
                     Profile Upload
                   </label>
                   <label
                     htmlFor="profileFile"
-                    className="flex cursor-pointer items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-white hover:bg-white/20 transition"
+                    className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 dark:border-white/30 px-3 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/20 transition"
                   >
                     <Upload className="h-5 w-5" />
                     {formData.profileFile ? formData.profileFile.name : "Attach file"}
@@ -298,7 +302,7 @@ const AdminDetails = () => {
       {/* Admin Details Popup */}
       {selectedAdmin && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 bg-black/60 animate-fade-in"
           onClick={() => setSelectedAdmin(null)}
         >
           <div
@@ -313,7 +317,7 @@ const AdminDetails = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-4 right-4 text-white hover:text-red-400"
+              className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
               onClick={() => setSelectedAdmin(null)}
             >
               <X className="h-5 w-5" />
@@ -329,7 +333,7 @@ const AdminDetails = () => {
               <p className="text-sm text-white/80">ID: {selectedAdmin.id}</p>
             </div>
 
-            <div className="mt-6 space-y-4 text-sm">
+            <div className="mt-6 space-y- approved4 text-sm">
               <div>
                 <h4 className="font-semibold text-white/70">Email</h4>
                 <p>{selectedAdmin.email}</p>
@@ -346,7 +350,12 @@ const AdminDetails = () => {
 
             <button
               onClick={() => setSelectedAdmin(null)}
+<<<<<<< HEAD
               className="w-full mt-6 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105  duration-300 rounded-lg" >
+=======
+              className="w-full mt-6 px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out rounded-md"
+            >
+>>>>>>> fc3c5d9df28f09c43fd8d338adbabd28a872d888
               Close
             </button>
           </div>
