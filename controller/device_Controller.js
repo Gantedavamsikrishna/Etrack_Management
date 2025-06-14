@@ -3,13 +3,25 @@ const device = require("../modals/devices_Scheme");
 // Create a new device
 const createDevice = async (req, res) => {
   try {
-    const { deviceName, devicePrice, deviceModel, deviceStatus } = req.body;
+    const {
+      deviceBarcode,
+      deviceName,
+      devicePrice,
+      deviceModel,
+      deviceStatus,
+      deviceLocation,
+    } = req.body;
     const newDevice = new device({
-     deviceName, devicePrice, deviceModel, deviceStatus
+      deviceBarcode,
+      deviceName,
+      devicePrice,
+      deviceModel,
+      deviceLocation,
+      deviceStatus,
     });
     await newDevice.save();
     res.status(201).json({
-      message: "Device data inserted  successfully",
+      message: "Device data inserted successfully",
       device: newDevice,
     });
   } catch (error) {
@@ -26,25 +38,42 @@ const getAlldevices = async (req, res) => {
     devices,
   });
 };
-// get device by id
+// get device by deviceBarcode
 const getDeviceById = async (req, res) => {
-  const { id } = req.params;
-  const deviceData = await device.findById(id);
-  if (!deviceData) {
-    return res.status(404).json({ message: "Device not found" });
+  const { deviceBarcode } = req.params;
+  try {
+    const deviceData = await device.findOne({ deviceBarcode });
+    if (!deviceData) {
+      return res.status(404).json({ message: "Device not found" });
+    }
+    res.status(200).json({
+      message: "Device data",
+      deviceData,
+    });
+  } catch (error) {
+    console.error("Error fetching device:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-  res.status(200).json({
-    message: "Device data",
-    deviceData,
-  });
 };
 // Update device by id
 const updateDeviceById = async (req, res) => {
-  const { id } = req.params;
-  const { deviceName, devicePrice, deviceModel, deviceStatus } = req.body;
-  const updatedDevice = await device.findByIdAndUpdate(
-    id,
-    { deviceName, devicePrice, deviceModel, deviceStatus },
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Request body is missing or empty" });
+  }
+  const { deviceBarcode } = req.params;
+  const { deviceName, devicePrice, deviceModel, deviceStatus, deviceLocation } =
+    req.body;
+  const updatedDevice = await device.findOneAndUpdate(
+    { deviceBarcode },
+    {
+      deviceName,
+      devicePrice,
+      deviceModel,
+      deviceStatus,
+      deviceLocation,
+    },
     { new: true }
   );
   if (!updatedDevice) {
@@ -59,11 +88,11 @@ const updateDeviceById = async (req, res) => {
 //filter device by status and device name using match aggregation
 const filterByName = async (req, res) => {
   try {
-    const { deviceName, deviceStatus } = req.query;
+    const { deviceBarcode, deviceStatus } = req.query;
     const matchStage = {};
 
     if (deviceName) {
-      matchStage.deviceName = { $regex: deviceName, $options: "i" }; // only if partial match needed
+      matchStage.deviceBarcode = { $regex: deviceBarcode, $options: "i" }; // only if partial match needed
     }
 
     if (deviceStatus) {

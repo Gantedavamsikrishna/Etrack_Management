@@ -11,9 +11,7 @@ const Router = express.Router();
 app.use("/api", Router);
 
 mongoose
-  .connect(
-    "mongodb+srv://phani9133:Phani%409133@phanicluster1.znlidni.mongodb.net/"
-  )
+  .connect("mongodb://localhost:27017/Empdata")
   .then(() => {
     console.log("Connected to MongoDB");
   })
@@ -23,26 +21,19 @@ mongoose
 
 //testing the connection
 Router.get("/", async (req, res) => {
-  try {
-    const collections = await mongoose.connection.db
-      .listCollections()
-      .toArray();
-    console.log(
-      "Collections in DB:",
-      collections.map((col) => col.name)
-    );
-    res.send(
-      `<h2>Collections in DB:</h2><ul>${collections
-        .map((col) => `<li>${col.name}</li>`)
-        .join("")}</ul>`
-    );
-  } catch (err) {
-    console.error("Error fetching collections:", err);
-    res.status(500).send("Error fetching collections");
-  }
+  const collections = await mongoose.connection.db.listCollections().toArray();
+  console.log(
+    "Collections in DB:",
+    collections.map((col) => col.name)
+  );
+  res.send(
+    `<h2>Collections in DB:</h2><ul>${collections
+      .map((col) => `<li>${col.name}</li>`)
+      .join("")}</ul>`
+  );
 });
 
-app.use("/api", devicesRouter);
+app.use("/device", devicesRouter);
 app.use("/floor", floors_router);
 app.use("/admin", adminRouter);
 

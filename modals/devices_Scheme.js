@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const deviceSchema = new mongoose.Schema({
+  deviceBarcode: {
+    type: String,
+    required: true,
+  },
   deviceName: {
     type: String,
     required: true,
@@ -17,6 +21,10 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     enum: ["active", "inactive", "maintenance"],
     default: "active",
+  },
+  deviceLocation: {
+    type: String,
+    required: true,
   },
 });
 
