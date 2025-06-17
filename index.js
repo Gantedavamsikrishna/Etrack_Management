@@ -11,7 +11,9 @@ const Router = express.Router();
 app.use("/api", Router);
 
 mongoose
-  .connect("mongodb://localhost:27017/Empdata")
+  .connect(
+    "mongodb+srv://phani9133:Phani%409133@phanicluster1.znlidni.mongodb.net/AdminDashboardDB"
+  )
   .then(() => {
     console.log("Connected to MongoDB");
   })
