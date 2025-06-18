@@ -10,7 +10,7 @@ const createAdmin = async (req, res) => {
       adminName,
       adminEmail,
       adminPassword,
-      adminImage,
+      adminImage:req.file ? req.file.filename :null,
     });
     await newAdmin.save();
     res.status(201).json({
