@@ -5,6 +5,7 @@ const devicesRouter = require("./routers/device_Router");
 const cors = require("cors");
 const floors_router = require("./routers/floor_Device_Routes");
 const adminRouter = require("./routers/admin_Routes");
+const reportRouter = require("./routers/report_Routes");
 app.use(express.json());
 app.use(cors());
 const Router = express.Router();
@@ -38,6 +39,7 @@ Router.get("/", async (req, res) => {
 app.use("/device", devicesRouter);
 app.use("/floor", floors_router);
 app.use("/admin", adminRouter);
+app.use("/report", reportRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
