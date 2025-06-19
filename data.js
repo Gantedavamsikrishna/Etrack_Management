@@ -73,3 +73,8 @@
 //     }
 //   ]
 // }
+// {
+//     "deviceBarcode": "BARCODE123456",
+//     "deviceName": "HP Printer",
+//     "deviceStatus": "active"
+// }

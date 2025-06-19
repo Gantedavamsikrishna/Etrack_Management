@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const roomDeviceSchema = new Schema({
+  deviceBarcode: {
+    type: String,
+    required: true,
+  },
+  devicePrice: {
+    type: Number,
+    required: true,
+  },
   deviceName: {
     type: String,
     required: true,
@@ -12,13 +20,13 @@ const roomDeviceSchema = new Schema({
   },
   deviceStatus: {
     type: String,
-    enum: ["working", "not working", "under maintenance"], // optional
+    // enum: ["working", "not working", "under maintenance"], // optional
     required: true,
   },
-  count: {
-    type: Number,
-    required: true,
-  },
+  // count: {
+  //   type: Number,
+  //   required: true,
+  // },
 });
 
 // 2. Room Schema inside a Wing
@@ -34,7 +42,7 @@ const roomSchema = new Schema({
 const wingSchema = new Schema({
   wingName: {
     type: String,
-    enum: ["Left Wing", "Right Wing"],
+    enum: ["Left Wing", "Right Wing", "Corridor"],
     required: true,
   },
   rooms: [roomSchema],
