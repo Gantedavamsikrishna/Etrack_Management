@@ -19,7 +19,7 @@ const deviceSchema = new mongoose.Schema({
   },
   deviceStatus: {
     type: String,
-    enum: ["active", "inactive", "maintenance"],
+    // enum: ["active", "inactive", "maintenance"],
     default: "active",
   },
   deviceLocation: {
