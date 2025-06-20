@@ -3,14 +3,14 @@ const admin = require("../modals/admin_Scheme");
 // Create a new admin
 const createAdmin = async (req, res) => {
   try {
-    const { adminId, adminName, adminEmail, adminPassword, adminImage } =
+    const { adminId, adminName, adminEmail, adminPassword} =
       req.body;
     const newAdmin = new admin({
       adminId,
       adminName,
       adminEmail,
       adminPassword,
-      adminImage:req.file ? req.file.filename :null,
+adminImage: req.file ? req.file.filename : null,
     });
     await newAdmin.save();
     res.status(201).json({
