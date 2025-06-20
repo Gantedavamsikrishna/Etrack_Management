@@ -130,21 +130,16 @@ const getDeviceById = async (req, res) => {
 // Controller to update location and status of a device
 
 const updateDeviceLocationAndStatus = async (req, res) => {
-  const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } =
-    req.body;
+  console.log("📦 Received body:", req.body);
 
-  if (
-    !deviceBarcode ||
-    !newFloorName ||
-    !newWingName ||
-    !newRoomName ||
-    !newStatus
-  ) {
+  const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } = req.body;
+
+  if (!deviceBarcode || !newFloorName || !newWingName || !newRoomName || !newStatus) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
   try {
-    // 1. Find the device in any floor
+    // Step 1: Find floor that contains the device
     const floorDoc = await Floor.findOne({
       "wings.rooms.devices.deviceBarcode": deviceBarcode,
     });
@@ -155,74 +150,56 @@ const updateDeviceLocationAndStatus = async (req, res) => {
 
     let foundDevice = null;
 
-    // 2. Remove the device from its current location
+    // Step 2: Remove device from current location
     for (const wing of floorDoc.wings) {
       for (const room of wing.rooms) {
-        const index = room.devices.findIndex(
-          (d) => d.deviceBarcode === deviceBarcode
-        );
+        const index = room.devices.findIndex(d => d.deviceBarcode === deviceBarcode);
         if (index !== -1) {
           foundDevice = room.devices[index];
-          room.devices.splice(index, 1); // Remove from old room
+          room.devices.splice(index, 1);
           break;
         }
       }
     }
 
     if (!foundDevice) {
-      return res
-        .status(404)
-        .json({ message: "Device found in DB but could not extract" });
+      return res.status(404).json({ message: "Device found in DB but could not extract" });
     }
 
-    // 3. Update the device status only
+    // Step 3: Update status
     foundDevice.deviceStatus = newStatus;
 
-    // 4. Find the target floor (existing only)
+    // Step 4: Find new target floor
     const targetFloor = await Floor.findOne({ floorName: newFloorName });
-
     if (!targetFloor) {
-      return res
-        .status(404)
-        .json({ message: "Target floor not found. Cannot move." });
+      return res.status(404).json({ message: "Target floor not found" });
     }
 
-    // 5. Find the target wing
-    let targetWing = targetFloor.wings.find((w) => w.wingName === newWingName);
+    // Step 5: Find wing in new floor
+    const targetWing = targetFloor.wings.find(w => w.wingName === newWingName);
     if (!targetWing) {
-      return res
-        .status(404)
-        .json({ message: "Target wing not found in floor." });
+      return res.status(404).json({ message: "Target wing not found" });
     }
 
-    // 6. Find the target room
-    let targetRoom = targetWing.rooms.find((r) => r.roomName === newRoomName);
+    // Step 6: Find room in wing
+    const targetRoom = targetWing.rooms.find(r => r.roomName === newRoomName);
     if (!targetRoom) {
-      return res
-        .status(404)
-        .json({ message: "Target room not found in wing." });
+      return res.status(404).json({ message: "Target room not found" });
     }
 
-    // 7. Add the updated device to the new location
+    // Step 7: Push updated device to new location
     targetRoom.devices.push(foundDevice);
 
-    // 8. Save both documents
-    await floorDoc.save(); // Save after removing from old location
-    await targetFloor.save(); // Save after inserting into new location
+    // Step 8: Save both modified floor docs
+    await floorDoc.save();       // old location updated
+    await targetFloor.save();    // new location updated
 
-    res
-      .status(200)
-      .json({ message: "Device location and status updated successfully." });
+    res.status(200).json({ message: "Device moved and status updated successfully." });
   } catch (error) {
-    console.error("Error updating device:", error);
+    console.error("❌ Error updating device:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-module.exports = {
-  updateDeviceLocationAndStatus,
-};
-
 module.exports = {
   createFloor,
   getAllFloors,
