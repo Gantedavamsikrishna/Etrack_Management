@@ -1,53 +1,68 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { users } from '../data/mockData';
 
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check if user is stored in localStorage
     const storedUser = localStorage.getItem('etrack-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (storedUser && storedUser !== 'undefined') {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (err) {
+        console.error('Failed to parse stored user:', err);
+        setError('Invalid session data. Please log in again.');
+        localStorage.removeItem('etrack-user');
+      }
     }
     setIsLoading(false);
   }, []);
 
   const login = async (email, password) => {
     setIsLoading(true);
+    setError('');
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const response = await fetch('https://etrack-backend.onrender.com/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminEmail: email, adminPassword: password }),
+      });
 
-    // Find user with matching email and password
-    const foundUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
+      const data = await response.json();
+      console.log('Login API response:', data);
 
-    if (foundUser) {
-      // Remove password before storing in state/localStorage
-      const { password, ...userWithoutPassword } = foundUser;
-
-      setUser(userWithoutPassword);
-      localStorage.setItem('etrack-user', JSON.stringify(userWithoutPassword));
+      if (response.ok && data.message === 'Login successful') {
+        // Store minimal user data since backend doesn't provide admin object
+        const userData = { adminEmail: email };
+        setUser(userData);
+        localStorage.setItem('etrack-user', JSON.stringify(userData));
+        setIsLoading(false);
+        return true;
+      } else {
+        setError(data.message || 'Invalid email or password');
+        setIsLoading(false);
+        return false;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Network error during login');
       setIsLoading(false);
-      return true;
+      return false;
     }
-
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('etrack-user');
+    setError('');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, error }}>
       {children}
     </AuthContext.Provider>
   );

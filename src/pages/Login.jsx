@@ -144,6 +144,7 @@ export const Login = () => {
     }
 
     try {
+      console.log('Attempting login with:', { email }); // Debug log
       const success = await login(email, password);
       if (success) {
         navigate("/");
