@@ -1,23 +1,87 @@
 const Floor = require("../modals/floors_Devices_Scheme");
 
-// Create a new floor
-const createFloor = async (req, res) => {
+const createOrUpdateFloor = async (req, res) => {
   try {
-    const { floorName, wings } = req.body;
-    const newFloor = new Floor({
-      floorName,
-      wings,
-    });
-    await newFloor.save();
-    res.status(201).json({
-      message: "Floor data inserted successfully",
-      floor: newFloor,
+    const { floorName, wingName, roomName, devices } = req.body;
+
+    if (
+      !floorName ||
+      !wingName ||
+      !roomName ||
+      !devices ||
+      !Array.isArray(devices)
+    ) {
+      return res.status(400).json({
+        message: "All fields are required and devices must be an array.",
+      });
+    }
+
+    // 1. Check if floor exists
+    let floor = await Floor.findOne({ floorName });
+
+    if (!floor) {
+      // Floor doesn't exist → create new
+      floor = new Floor({
+        floorName,
+        wings: [
+          {
+            wingName,
+            rooms: [
+              {
+                roomName,
+                devices,
+              },
+            ],
+          },
+        ],
+      });
+      await floor.save();
+      return res.status(201).json({
+        message: "New floor, wing, room, and devices created.",
+        floor,
+      });
+    }
+
+    // 2. Floor exists → check wing
+    let wing = floor.wings.find((w) => w.wingName === wingName);
+    if (!wing) {
+      // Wing not found → add new wing
+      floor.wings.push({
+        wingName,
+        rooms: [
+          {
+            roomName,
+            devices,
+          },
+        ],
+      });
+    } else {
+      // 3. Wing exists → check room
+      let room = wing.rooms.find((r) => r.roomName === roomName);
+      if (!room) {
+        // Room not found → add new room
+        wing.rooms.push({
+          roomName,
+          devices,
+        });
+      } else {
+        // 4. Room exists → append devices
+        room.devices.push(...devices);
+      }
+    }
+
+    await floor.save();
+
+    res.status(200).json({
+      message: "Floor updated successfully.",
+      floor,
     });
   } catch (error) {
-    console.error("Error creating floor:", error);
+    console.error("Error updating/creating floor:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 //get all floors data
 const getAllFloors = async (req, res) => {
   try {
@@ -129,104 +193,103 @@ const getDeviceById = async (req, res) => {
 
 // Controller to update location and status of a device
 
-const updateDeviceLocationAndStatus = async (req, res) => {
-  const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } =
-    req.body;
+// const updateDeviceLocationAndStatus = async (req, res) => {
+//   const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } =
+//     req.body;
 
-  if (
-    !deviceBarcode ||
-    !newFloorName ||
-    !newWingName ||
-    !newRoomName ||
-    !newStatus
-  ) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
+//   if (
+//     !deviceBarcode ||
+//     !newFloorName ||
+//     !newWingName ||
+//     !newRoomName ||
+//     !newStatus
+//   ) {
+//     return res.status(400).json({ message: "All fields are required" });
+//   }
 
-  try {
-    // 1. Find the device in any floor
-    const floorDoc = await Floor.findOne({
-      "wings.rooms.devices.deviceBarcode": deviceBarcode,
-    });
+//   try {
+//     // 1. Find the device in any floor
+//     const floorDoc = await Floor.findOne({
+//       "wings.rooms.devices.deviceBarcode": deviceBarcode,
+//     });
 
-    if (!floorDoc) {
-      return res.status(404).json({ message: "Device not found" });
-    }
+//     if (!floorDoc) {
+//       return res.status(404).json({ message: "Device not found" });
+//     }
 
-    let foundDevice = null;
+//     let foundDevice = null;
 
-    // 2. Remove the device from its current location
-    for (const wing of floorDoc.wings) {
-      for (const room of wing.rooms) {
-        const index = room.devices.findIndex(
-          (d) => d.deviceBarcode === deviceBarcode
-        );
-        if (index !== -1) {
-          foundDevice = room.devices[index];
-          room.devices.splice(index, 1); // Remove from old room
-          break;
-        }
-      }
-    }
+//     // 2. Remove the device from its current location
+//     for (const wing of floorDoc.wings) {
+//       for (const room of wing.rooms) {
+//         const index = room.devices.findIndex(
+//           (d) => d.deviceBarcode === deviceBarcode
+//         );
+//         if (index !== -1) {
+//           foundDevice = room.devices[index];
+//           room.devices.splice(index, 1); // Remove from old room
+//           break;
+//         }
+//       }
+//     }
 
-    if (!foundDevice) {
-      return res
-        .status(404)
-        .json({ message: "Device found in DB but could not extract" });
-    }
+//     if (!foundDevice) {
+//       return res
+//         .status(404)
+//         .json({ message: "Device found in DB but could not extract" });
+//     }
 
-    // 3. Update the device status only
-    foundDevice.deviceStatus = newStatus;
+//     // 3. Update the device status only
+//     foundDevice.deviceStatus = newStatus;
 
-    // 4. Find the target floor (existing only)
-    const targetFloor = await Floor.findOne({ floorName: newFloorName });
+//     // 4. Find the target floor (existing only)
+//     const targetFloor = await Floor.findOne({ floorName: newFloorName });
 
-    if (!targetFloor) {
-      return res
-        .status(404)
-        .json({ message: "Target floor not found. Cannot move." });
-    }
+//     if (!targetFloor) {
+//       return res
+//         .status(404)
+//         .json({ message: "Target floor not found. Cannot move." });
+//     }
 
-    // 5. Find the target wing
-    let targetWing = targetFloor.wings.find((w) => w.wingName === newWingName);
-    if (!targetWing) {
-      return res
-        .status(404)
-        .json({ message: "Target wing not found in floor." });
-    }
+//     // 5. Find the target wing
+//     let targetWing = targetFloor.wings.find((w) => w.wingName === newWingName);
+//     if (!targetWing) {
+//       return res
+//         .status(404)
+//         .json({ message: "Target wing not found in floor." });
+//     }
 
-    // 6. Find the target room
-    let targetRoom = targetWing.rooms.find((r) => r.roomName === newRoomName);
-    if (!targetRoom) {
-      return res
-        .status(404)
-        .json({ message: "Target room not found in wing." });
-    }
+//     // 6. Find the target room
+//     let targetRoom = targetWing.rooms.find((r) => r.roomName === newRoomName);
+//     if (!targetRoom) {
+//       return res
+//         .status(404)
+//         .json({ message: "Target room not found in wing." });
+//     }
 
-    // 7. Add the updated device to the new location
-    targetRoom.devices.push(foundDevice);
+//     // 7. Add the updated device to the new location
+//     targetRoom.devices.push(foundDevice);
 
-    // 8. Save both documents
-    await floorDoc.save(); // Save after removing from old location
-    await targetFloor.save(); // Save after inserting into new location
-
-    res
-      .status(200)
-      .json({ message: "Device location and status updated successfully." });
-  } catch (error) {
-    console.error("Error updating device:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     // 8. Save safely to avoid version conflict
+//     if (floorDoc._id.equals(targetFloor._id)) {
+//       await floorDoc.save();
+//     } else {
+//       await floorDoc.save();
+//       await targetFloor.save();
+//     }
+//     res
+//       .status(200)
+//       .json({ message: "Device location and status updated successfully." });
+//   } catch (error) {
+//     console.error("Error updating device:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 module.exports = {
-  updateDeviceLocationAndStatus,
-};
-
-module.exports = {
-  createFloor,
+  // createFloor,
   getAllFloors,
   filterByfloors,
   getDeviceById,
-  updateDeviceLocationAndStatus,
+  createOrUpdateFloor,
 };
