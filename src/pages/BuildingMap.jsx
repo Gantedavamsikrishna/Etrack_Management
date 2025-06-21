@@ -1,16 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buildingData } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { BuildingMapSkeleton } from '../utils/SkeletonLoader';
 
 export const BuildingMap = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedFloor, setSelectedFloor] = useState(null);
+  const [floors, setFloors] = useState([]);
+  const [loading,setLoading]=useState([]);
 
-  // Safeguard for buildingData.floors, ensure at least 5 floors
-  const totalFloors = Math.max(buildingData?.floors?.length || 0, 5);
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-  // Calculate total properties and status counts for each floor
-  const floorStats = (buildingData?.floors || []).map(floor => {
+    const fetchFloors = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+        const data = await response.json();
+        console.log('BuildingMap API Response:', data); // Debug: Log raw API response
+        if (response.ok) {
+          setLoading(false);
+          const mappedFloors = data.map(floor => ({
+            id: parseInt(floor.floorName.match(/\d+/)[0]),
+            name: floor.floorName,
+            halls: (floor.wings || []).map((wing, wingIndex) => ({
+              id: wingIndex.toString(), // Use index as ID
+              name: wing.wingName,
+              rooms: (wing.rooms || []).map((room, roomIndex) => ({
+                id: roomIndex.toString(), // Use index as ID
+                name: room.roomName,
+                properties: (room.devices || []).flatMap(device => 
+                  Array(device.count || 1).fill().map(() => ({
+                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
+                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                          device.deviceName.toLowerCase().includes('light') ? 'light' :
+                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                    brand: device.deviceName.split(' ')[0] || 'Unknown',
+                    model: device.deviceModel || 'Unknown',
+                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
+                  }))
+                )
+              }))
+            }))
+          }));
+          console.log('BuildingMap Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          setFloors(mappedFloors);
+        } else {
+          console.error('Failed to fetch floors:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching floors:', error);
+      }
+    };
+
+    fetchFloors();
+  }, [user, navigate]);
+
+  const floorStats = floors.map(floor => {
     const properties = floor.halls?.flatMap(hall => 
       hall.rooms?.flatMap(room => room.properties) || []
     ) || [];
@@ -22,50 +80,17 @@ export const BuildingMap = () => {
       notWorkingProperties: properties.filter(p => p.status === 'not_working').length,
     };
   });
-
-  // Fallback for 5th floor if not in buildingData
-  const getFloorData = (floorId) => {
-    const floor = buildingData?.floors?.find(f => f.id === floorId);
-    if (floor) return floor;
-    if (floorId === 5) {
-      return {
-        id: 5,
-        halls: [
-          {
-            id: 'center-5',
-            name: 'Center',
-            rooms: [
-              { id: 'room-5-1', name: 'Room 5-1', properties: [] },
-              { id: 'room-5-2', name: 'Room 5-2', properties: [] },
-            ],
-          },
-          {
-            id: 'left-wing-5',
-            name: 'Left Wing',
-            rooms: [
-              { id: 'room-5-3', name: 'Room 5-3', properties: [] },
-              { id: 'room-5-4', name: 'Room 5-4', properties: [] },
-            ],
-          },
-          {
-            id: 'right-wing-5',
-            name: 'Right Wing',
-            rooms: [
-              { id: 'room-5-5', name: 'Server Room', properties: [] },
-              { id: 'room-5-6', name: 'Room 5-6', properties: [] },
-            ],
-          },
-        ],
-      };
-    }
-    return null;
-  };
+  
+  if (loading) {
+  return <BuildingMapSkeleton />;
+}
 
   const handleFloorClick = (floorId) => {
     setSelectedFloor(floorId);
   };
 
   const handleHallClick = (floorId, hallId) => {
+    console.log('Navigating to:', `/floors/${floorId}/halls/${hallId}`); // Debug: Log navigation
     navigate(`/floors/${floorId}/halls/${hallId}`);
   };
 
@@ -79,38 +104,30 @@ export const BuildingMap = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        {/* Building visualization */}
         <div className="lg:col-span-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
           <h2 className="text-xl font-semibold mb-3 text-center text-gray-900 dark:text-white">Building Structure</h2>
           
           <div className="space-y-3 max-w-4xl mx-auto">
-            {/* Floor selector */}
             <div className="flex flex-row flex-wrap gap-2 justify-center mb-4">
-              {[...Array(totalFloors)].map((_, index) => {
-                const floorId = index + 1; // Ascending order
-                const floor = getFloorData(floorId);
-                
-                if (!floor) return null;
-                
-                const isSelected = selectedFloor === floorId;
+              {floors.map(floor => {
+                const isSelected = selectedFloor === floor.id;
                 
                 return (
                   <button 
-                    key={floorId}
+                    key={floor.id}
                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300
                       ${isSelected 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 ring-2 ring-green-500'
                         : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
-                    onClick={() => handleFloorClick(floorId)}
+                    onClick={() => handleFloorClick(floor.id)}
                   >
-                    Floor {floorId}
+                    Floor {floor.id}
                   </button>
                 );
               })}
             </div>
             
-            {/* Floor visualization */}
             {selectedFloor ? (
               <div className="animate-fade-in">
                 <h3 className="text-lg font-medium mb-3 text-center text-gray-900 dark:text-white">
@@ -118,9 +135,8 @@ export const BuildingMap = () => {
                 </h3>
                 
                 <div className="space-y-3">
-                  {/* Corridor Hall */}
                   {(() => {
-                    const floor = getFloorData(selectedFloor);
+                    const floor = floors.find(f => f.id === selectedFloor);
                     const centerHall = floor?.halls?.find(h => h.name === 'Corridor' || h.name === 'Center' || h.name === 'Outdoor');
                     
                     if (!centerHall) return null;
@@ -167,10 +183,10 @@ export const BuildingMap = () => {
                     );
                   })()}
                   
-                  {/* Left and Right Wings */}
                   {selectedFloor === 3 ? (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      {getFloorData(selectedFloor)
+                      {floors
+                        .find(f => f.id === selectedFloor)
                         ?.halls?.filter(h => h.name === 'Left Wing' || h.name === 'Right Wing')
                         .map(hall => {
                           const isThirdFloor = selectedFloor === 3;
@@ -191,7 +207,6 @@ export const BuildingMap = () => {
                               <h4 className="font-medium text-white mb-2 text-center">{hall.name}</h4>
                               {isLeftWing ? (
                                 <div className="flex flex-col gap-1 max-w-full">
-                                  {/* Row for Bay 1-3 */}
                                   <div className="flex flex-row gap-1 justify-center">
                                     {hall.rooms?.slice(0, 3).map(room => (
                                       <div
@@ -203,7 +218,6 @@ export const BuildingMap = () => {
                                       </div>
                                     ))}
                                   </div>
-                                  {/* Row for Bay 4-5 */}
                                   <div className="flex flex-row gap-1 justify-center">
                                     {hall.rooms?.slice(3, 5).map(room => (
                                       <div
@@ -225,7 +239,7 @@ export const BuildingMap = () => {
                                     >
                                       <p className="text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap">{room.name}</p>
                                       <p className="text-xs">{room.properties?.length || 0} items</p>
-                                    </div>
+                                      </div>
                                   ))}
                                 </div>
                               )}
@@ -235,7 +249,8 @@ export const BuildingMap = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      {getFloorData(selectedFloor)
+                      {floors
+                        .find(f => f.id === selectedFloor)
                         ?.halls?.filter(h => h.name === 'Left Wing' || h.name === 'Right Wing')
                         .map(hall => {
                           const hallProps = hall.rooms?.flatMap(room => room.properties || []) || [];
@@ -304,7 +319,6 @@ export const BuildingMap = () => {
           </div>
         </div>
         
-        {/* Building stats */}
         <div className="lg:col-span-4 space-y-3">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
             <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Building Stats</h2>
@@ -312,30 +326,29 @@ export const BuildingMap = () => {
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Floors</p>
-                <p className="text-2xl font-medium text-gray-900 dark:text-white">{totalFloors}</p>
+                <p className="text-2xl font-medium text-gray-900 dark:text-white">{floors.length}</p>
               </div>
               
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Sections</p>
                 <p className="text-2xl font-medium text-gray-900 dark:text-white">
-                  {buildingData?.floors?.reduce((acc, floor) => acc + (floor.halls?.length || 0), 0) || 0}
+                  {floors.reduce((acc, floor) => acc + (floor.halls?.length || 0), 0)}
                 </p>
               </div>
               
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Rooms</p>
                 <p className="text-2xl font-medium text-gray-900 dark:text-white">
-                  {buildingData?.floors?.reduce(
+                  {floors.reduce(
                     (acc, floor) => acc + (floor.halls?.reduce(
                       (hallAcc, hall) => hallAcc + (hall.rooms?.length || 0), 0
                     ) || 0), 0
-                  ) || 0}
+                  )}
                 </p>
               </div>
             </div>
           </div>
           
-          {/* Floor health */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3">
             <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Floor Health</h2>
             

@@ -7,28 +7,27 @@ import { useNavigate } from 'react-router-dom';
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
-      setError('Please enter both email and password.');
-      return;
+      return; // Error handled by AuthContext
     }
 
     try {
+      console.log('Attempting login with:', { email }); // Debug log
       const success = await login(email, password);
       if (success) {
-        navigate('/');
+        console.log('Login successful, navigating to dashboard'); // Debug log
+        navigate('/', { replace: true });
       } else {
-        setError('Invalid email or password.');
+        console.log('Login failed:', error); // Debug log
       }
     } catch (error) {
-      setError('An error occurred during login.');
+      console.error('Unexpected error in handleSubmit:', error);
     }
   };
 
@@ -77,9 +76,6 @@ export const Login = () => {
                 placeholder="user@example.com"
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Demo: admin@example.com / user@example.com
-            </p>
           </div>
 
           <div>
@@ -105,9 +101,6 @@ export const Login = () => {
                 placeholder="••••••••"
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Demo: admin123 / user123
-            </p>
           </div>
 
           <Button

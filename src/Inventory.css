@@ -1,0 +1,30 @@
+
+@keyframes borderBlink {
+  0%, 100% {
+    border-color: #d1d5db; /* gray-300 */
+    box-shadow: 0 0 0 0 #3b82f6; /* blue-500 */
+  }
+  50% {
+    border-color: #3b82f6; /* blue-500 */
+    box-shadow: 0 0 0 2px #3b82f6; /* blue-500 */
+  }
+}
+
+@keyframes borderBlinkDark {
+  0%, 100% {
+    border-color: #374151; /* gray-700 */
+    box-shadow: 0 0 0 0 #3b82f6; /* blue-500 */
+  }
+  50% {
+    border-color: #3b82f6; /* blue-500 */
+    box-shadow: 0 0 0 2px #3b82f6; /* blue-500 */
+  }
+}
+
+.animate-border-blink {
+  animation: borderBlink 1.5s ease-in-out infinite;
+}
+
+.dark .animate-border-blink {
+  animation: borderBlinkDark 1.5s ease-in-out infinite;
+}

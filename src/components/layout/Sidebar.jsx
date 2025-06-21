@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Gauge, LampDesk, Layers, Map } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
-import { buildingData } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
 
 const NavItem = ({
   to,
@@ -56,8 +56,68 @@ const NavItem = ({
 };
 
 export const Sidebar = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [expandedFloors, setExpandedFloors] = useState({});
   const [expandedHalls, setExpandedHalls] = useState({});
+  const [floors, setFloors] = useState([]);
+
+  useEffect(() => {
+    if (!user) {
+      console.log('No user, redirecting to login');
+      navigate('/login');
+      return;
+    }
+
+    const fetchFloors = async () => {
+      try {
+        const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+        const data = await response.json();
+        console.log('Sidebar API Response:', data); // Debug: Log raw API response
+        if (response.ok) {
+          const mappedFloors = data.map(floor => ({
+            id: parseInt(floor.floorName.match(/\d+/)[0]),
+            name: floor.floorName,
+            halls: (floor.wings || []).map((wing, wingIndex) => ({
+              id: wingIndex.toString(), // Use index as ID
+              name: wing.wingName,
+              rooms: (wing.rooms || []).map((room, roomIndex) => ({
+                id: roomIndex.toString(), // Use index as ID
+                name: room.roomName,
+                properties: (room.devices || []).flatMap(device => 
+                  Array(device.count || 1).fill().map(() => ({
+                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
+                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                          device.deviceName.toLowerCase().includes('light') ? 'light' :
+                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                    brand: device.deviceName.split(' ')[0] || 'Unknown',
+                    model: device.deviceModel || 'Unknown',
+                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
+                  }))
+                )
+              }))
+            }))
+          }));
+          console.log('Sidebar Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          setFloors(mappedFloors);
+        } else {
+          console.error('Failed to fetch floors:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching floors:', error);
+      }
+    };
+
+    fetchFloors();
+  }, [user, navigate]);
 
   const toggleFloor = (floorId) => {
     setExpandedFloors((prev) => ({ ...prev, [floorId]: !prev[floorId] }));
@@ -70,7 +130,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Overlay for mobile when sidebar is open */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-[40] lg:hidden"
@@ -78,7 +137,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
         />
       )}
 
-      {/* Sidebar */}
       <div
         className={cn(
           'fixed inset-y-0 left-0 z-[50] w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-300 ease-in-out',
@@ -101,48 +159,52 @@ export const Sidebar = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {buildingData.floors.map((floor) => (
-              <React.Fragment key={floor.id}>
-                <NavItem
-                  to={`/floors/${floor.id}`}
-                  icon={<Building2 className="h-5 w-5" />}
-                  label={floor.name}
-                  hasArrow
-                  isExpanded={expandedFloors[floor.id]}
-                  onToggle={() => toggleFloor(floor.id)}
-                />
-                {expandedFloors[floor.id] && (
-                  <div className="mt-1 space-y-1 animate-slide-in">
-                    {floor.halls.map((hall) => (
-                      <React.Fragment key={hall.id}>
-                        <NavItem
-                          to={`/floors/${floor.id}/halls/${hall.id}`}
-                          icon={<Layers className="h-4 w-4" />}
-                          label={hall.name}
-                          isChild
-                          hasArrow
-                          isExpanded={expandedHalls[`${floor.id}-${hall.id}`]}
-                          onToggle={() => toggleHall(floor.id, hall.id)}
-                        />
-                        {expandedHalls[`${floor.id}-${hall.id}`] && (
-                          <div className="mt-1 space-y-1 animate-slide-in">
-                            {hall.rooms.map((room) => (
-                              <NavItem
-                                key={room.id}
-                                to={`/floors/${floor.id}/halls/${hall.id}/rooms/${room.id}`}
-                                icon={<div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600" />}
-                                label={room.name}
-                                isChild
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
+            {floors.length === 0 ? (
+              <div className="px-4 text-sm text-gray-500 dark:text-gray-400">Loading floors...</div>
+            ) : (
+              floors.map((floor) => (
+                <React.Fragment key={floor.id}>
+                  <NavItem
+                    to={`/floors/${floor.id}`}
+                    icon={<Building2 className="h-5 w-5" />}
+                    label={floor.name}
+                    hasArrow
+                    isExpanded={expandedFloors[floor.id]}
+                    onToggle={() => toggleFloor(floor.id)}
+                  />
+                  {expandedFloors[floor.id] && (
+                    <div className="mt-1 space-y-1 animate-slide-in">
+                      {floor.halls.map((hall) => (
+                        <React.Fragment key={hall.id}>
+                          <NavItem
+                            to={`/floors/${floor.id}/halls/${hall.id}`}
+                            icon={<Layers className="h-4 w-4" />}
+                            label={hall.name}
+                            isChild
+                            hasArrow
+                            isExpanded={expandedHalls[`${floor.id}-${hall.id}`]}
+                            onToggle={() => toggleHall(floor.id, hall.id)}
+                          />
+                          {expandedHalls[`${floor.id}-${hall.id}`] && (
+                            <div className="mt-1 space-y-1 animate-slide-in">
+                              {hall.rooms.map((room) => (
+                                <NavItem
+                                  key={room.id}
+                                  to={`/floors/${floor.id}/halls/${hall.id}/rooms/${room.id}`}
+                                  icon={<div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600" />}
+                                  label={room.name}
+                                  isChild
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+                </React.Fragment>
+              ))
+            )}
 
             <div className="pt-4 pb-2">
               <div className="flex items-center px-4">

@@ -1,43 +1,96 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { PropertyList } from '../components/property/PropertyList';
 import { StatusChart } from '../components/charts/StatusChart';
 import { PropertyTypeChart } from '../components/charts/PropertyTypeChart';
-import { buildingData } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import WifiLoader from '../utils/Loader.jsx';
 
 export const Room = () => {
   const { floorId, hallId, roomId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Validate buildingData
-  if (!buildingData || !buildingData.floors) {
+  const [floors, setFloors] = useState([]);
+  const [loading, setLoading] = useState(true); // ✅ Loading state
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchFloors = async () => {
+      try {
+        const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          const mappedFloors = data.map(floor => ({
+            id: parseInt(floor.floorName.match(/\d+/)[0]),
+            name: floor.floorName,
+            halls: (floor.wings || []).map((wing, wingIndex) => ({
+              id: wingIndex.toString(),
+              name: wing.wingName,
+              rooms: (wing.rooms || []).map((room, roomIndex) => ({
+                id: roomIndex.toString(),
+                name: room.roomName,
+                properties: (room.devices || []).flatMap(device =>
+                  Array(device.count || 1).fill().map(() => ({
+                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
+                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                          device.deviceName.toLowerCase().includes('light') ? 'light' :
+                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                    brand: device.deviceName.split(' ')[0] || 'Unknown',
+                    model: device.deviceModel || 'Unknown',
+                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
+                  }))
+                )
+              }))
+            }))
+          }));
+
+          setFloors(mappedFloors);
+        } else {
+          console.error('Failed to fetch floors:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching floors:', error);
+      } finally {
+        setLoading(false); // ✅ Stop loading
+      }
+    };
+
+    fetchFloors();
+  }, [user, navigate]);
+
+  // ✅ Show loader while fetching data
+  if (loading) {
     return (
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <p className="text-red-500">Invalid building data</p>
-        <Link 
-          to="/" 
-          className="mt-4 inline-flex items-center text-primary-600 dark:text-primary-400 hover:underline"
-        >
-          Return to Dashboard
-        </Link>
+      <div className="h-[550px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <WifiLoader className="scale-[2]" />
       </div>
     );
   }
 
-  const floor = buildingData.floors.find((f) => f.id === Number(floorId));
-  const hall = floor?.halls?.find((h) => h.id === Number(hallId));
-  const room = hall?.rooms?.find((r) => r.id === Number(roomId));
+  // ✅ Room lookup after loading
+  const floor = floors.find((f) => f.id === parseInt(floorId));
+  const hall = floor?.halls?.find((h) => h.id === parseInt(hallId).toString());
+  const room = hall?.rooms?.find((r) => r.id === parseInt(roomId).toString());
 
   if (!floor || !hall || !room) {
     return (
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <p className="text-red-500">Room not found</p>
-        <Link 
-          to="/" 
-          className="mt-4 inline-flex items-center text-primary-600 dark:text-primary-400 hover:underline"
-        >
-          Return to Dashboard
-        </Link>
+      <div className="h-[700px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <WifiLoader className="scale-[2]" />
       </div>
     );
   }
@@ -45,24 +98,15 @@ export const Room = () => {
   return (
     <div className="space-y-6">
       <nav className="flex items-center text-sm font-medium">
-        <Link 
-          to="/" 
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-        >
+        <Link to="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
           Dashboard
         </Link>
         <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
-        <Link 
-          to={`/floors/${floor.id}`}
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-        >
+        <Link to={`/floors/${floor.id}`} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
           {floor.name}
         </Link>
         <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
-        <Link 
-          to={`/floors/${floor.id}/halls/${hall.id}`}
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-        >
+        <Link to={`/floors/${floor.id}/halls/${hall.id}`} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
           {hall.name}
         </Link>
         <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
@@ -71,7 +115,7 @@ export const Room = () => {
 
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {floor.name}  {hall.name} {room.name}
+          {floor.name} {hall.name} {room.name}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           View properties in this room

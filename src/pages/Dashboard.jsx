@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   Layers, 
@@ -10,19 +11,80 @@ import {
 import { Card, CardContent } from '../components/ui/Card';
 import { StatusChart } from '../components/charts/StatusChart';
 import { PropertyTypeChart } from '../components/charts/PropertyTypeChart.jsx';
-import { buildingData } from '../data/mockData';
 import { PropertyType } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 export const Dashboard = () => {
-  const totalFloors = buildingData.floors.length;
-  const totalHalls = buildingData.floors.reduce((acc, floor) => acc + floor.halls.length, 0);
-  const totalRooms = buildingData.floors.reduce(
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [floors, setFloors] = useState([]);
+
+  useEffect(() => {
+    if (!user) {
+      console.log('No user, redirecting to login');
+      navigate('/login');
+      return;
+    }
+
+    const fetchFloors = async () => {
+      try {
+        const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+        const data = await response.json();
+        console.log('Dashboard API Response:', data); // Debug: Log raw API response
+        if (response.ok) {
+          const mappedFloors = data.map(floor => ({
+            id: parseInt(floor.floorName.match(/\d+/)[0]),
+            name: floor.floorName,
+            halls: (floor.wings || []).map((wing, wingIndex) => ({
+              id: wingIndex.toString(), // Use index as ID
+              name: wing.wingName,
+              rooms: (wing.rooms || []).map((room, roomIndex) => ({
+                id: roomIndex.toString(), // Use index as ID
+                name: room.roomName,
+                properties: (room.devices || []).flatMap(device => 
+                  Array(device.count || 1).fill().map(() => ({
+                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
+                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                          device.deviceName.toLowerCase().includes('light') ? 'light' :
+                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                    brand: device.deviceName.split(' ')[0] || 'Unknown',
+                    model: device.deviceModel || 'Unknown',
+                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
+                  }))
+                )
+              }))
+            }))
+          }));
+          console.log('Dashboard Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          setFloors(mappedFloors);
+        } else {
+          console.error('Failed to fetch floors:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching floors:', error);
+      }
+    };
+
+    fetchFloors();
+  }, [user, navigate]);
+
+  const totalFloors = floors.length;
+  const totalHalls = floors.reduce((acc, floor) => acc + floor.halls.length, 0);
+  const totalRooms = floors.reduce(
     (acc, floor) => acc + floor.halls.reduce(
       (hallAcc, hall) => hallAcc + hall.rooms.length, 0
     ), 0
   );
 
-  const allProperties = buildingData.floors.flatMap(floor => 
+  const allProperties = floors.flatMap(floor => 
     floor.halls.flatMap(hall => 
       hall.rooms.flatMap(room => 
         room.properties
