@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom'; // Add this import
+import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent } from 'lucide-react';
 import { cn } from '../../utils/cn';
@@ -18,9 +18,11 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     status: property.status || 'working',
-    barcode: property.barcode || '',
-    location: property.location || '',
+    id: property.id || '',
+    location: property.deviceLocation || '',
   });
+
+  console.log('PropertyModal property:', property); // Debug prop
 
   const formatType = (type) => {
     return type
@@ -39,7 +41,14 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
   };
 
   const handleSave = () => {
-    onEdit({ ...property, ...formData });
+    const updatedProperty = {
+      ...property,
+      ...formData,
+      deviceLocation: formData.location, // Ensure deviceLocation is updated
+    };
+    console.log('Saving updated property:', updatedProperty); // Debug save
+    onEdit(updatedProperty);
+    // Do not close modal to show updated values
     setIsEditing(false);
   };
 
@@ -176,13 +185,13 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                 {enableEdit && isEditing ? (
                   <input
                     type="text"
-                    name="barcode"
-                    value={formData.barcode}
+                    name="id"
+                    value={formData.id}
                     onChange={handleInputChange}
                     className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-green-400"
                   />
                 ) : (
-                  <p className="text-sm sm:text-base">{property.barcode || 'N/A'}</p>
+                  <p className="text-sm sm:text-base">{property.id || 'N/A'}</p>
                 )}
               </div>
 
@@ -199,7 +208,11 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-green-400"
                   />
                 ) : (
-                  <p className="text-sm sm:text-base">{property.location || 'N/A'}</p>
+<p className="text-sm sm:text-base">
+  {property.floorName && property.wingName && property.roomName
+    ? `${property.floorName} / ${property.wingName} / ${property.roomName}`
+    : formData.location || property.deviceLocation || 'N/A'}
+</p>
                 )}
               </div>
             </div>
@@ -252,5 +265,5 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
     </>
   );
 
-  return createPortal(modalContent, document.body); // Add this to render the modal into document.body
+  return createPortal(modalContent, document.body);
 };

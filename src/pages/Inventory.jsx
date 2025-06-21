@@ -1,29 +1,40 @@
-import React, { useState } from 'react';
+import '../Inventory.css';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PropertyList } from '../components/property/PropertyList';
-import { buildingData } from '../data/mockData';
 import { PropertyType, PropertyStatus } from '../types';
-import Papa from 'papaparse';
+import Axios from 'axios';
 import { Plus, X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent, ChevronDown } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+// import { CardSkeleton } from '../utils/Loader';
+// import Papa from 'papaparse';
+
 
 const propertyIcons = {
-  "monitor": <Monitor className="h-8 w-8" />,
-  "keyboard": <Keyboard className="h-8 w-8" />,
-  "mouse": <Mouse className="h-8 w-8" />,
-  "fan": <Fan className="h-8 w-8" />,
-  "light": <Lightbulb className="h-8 w-8" />,
-  "wifi-router": <Wifi className="h-8 w-8" />,
-  "ac": <AirVent className="h-8 w-8" />,
+  monitor: <Monitor className="h-8 w-8" />,
+  keyboard: <Keyboard className="h-8 w-8" />,
+  mouse: <Mouse className="h-8 w-8" />,
+  fan: <Fan className="h-8 w-8" />,
+  light: <Lightbulb className="h-8 w-8" />,
+  'wifi-router': <Wifi className="h-8 w-8" />,
+  ac: <AirVent className="h-8 w-8" />,
 };
 
 export const Inventory = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedFloor, setSelectedFloor] = useState('all');
   const [selectedHall, setSelectedHall] = useState('all');
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [selectedDevice, setSelectedDevice] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [floors, setFloors] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [newProperty, setNewProperty] = useState({
     id: '',
     name: '',
@@ -38,69 +49,253 @@ export const Inventory = () => {
     roomId: ''
   });
 
-  const allProperties = buildingData.floors.flatMap(floor => 
-    floor.halls.flatMap(hall => 
-      hall.rooms.flatMap(room => 
-        room.properties.map(property => ({
-          ...property,
-          floorId: floor.id,
-          hallId: hall.id,
-          roomId: room.id,
-          floorName: floor.name,
-          hallName: hall.name,
-          roomName: room.name
-        }))
-      )
-    )
-  );
+  const axiosInstance = Axios.create({
+    baseURL: 'https://etrack-backend.onrender.com/floor',
+  });
 
-  const floors = buildingData.floors;
-  const halls = selectedFloor === 'all' 
-    ? []
-    : floors.find(f => f.id === parseInt(selectedFloor))?.halls || [];
-  const rooms = selectedHall === 'all' 
-    ? []
-    : halls.find(h => h.id === parseInt(selectedHall))?.rooms || [];
+  useEffect(() => {
+    if (!user) {
+      setError('Please log in to view inventory');
+      setLoading(false);
+      navigate('/login');
+      return;
+    }
 
-  // Apply filters
-  const filteredProperties = allProperties.filter((property) => {
-    if (selectedFloor !== 'all' && property.floorId !== parseInt(selectedFloor)) {
-      return false;
+    const fetchData = async () => {
+      try {
+        // Fetch all floors
+        const floorResponse = await axiosInstance.get('/getAllFloors');
+        const floorsArray = Array.isArray(floorResponse.data) ? floorResponse.data : [];
+        setFloors(floorsArray);
+
+        // Fetch filtered devices
+        await fetchFilteredDevices();
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err.response?.data?.message || 'Network error: Unable to reach the server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, navigate]);
+
+  const fetchFilteredDevices = async () => {
+    try {
+      const params = {};
+      if (selectedFloor !== 'all') {
+        const floor = floors.find(f => f._id === selectedFloor);
+        if (floor) params.floorName = floor.floorName;
+      }
+      if (selectedHall !== 'all') {
+        const hall = halls.find(h => h._id === selectedHall);
+        if (hall) params.wingName = hall.wingName;
+      }
+      if (selectedRoom !== 'all') {
+        const room = rooms.find(r => r._id === selectedRoom);
+        if (room) params.roomName = room.roomName;
+      }
+      if (selectedDevice) {
+        params.deviceName = selectedDevice.replace('-', ' ');
+      }
+
+      const deviceResponse = await axiosInstance.get('/filterByfloors', { params });
+      const mappedProperties = deviceResponse.data.flatMap(floor =>
+        floor.wings.flatMap(wing =>
+          wing.rooms.flatMap(room =>
+            (room.devices || []).map(device => ({
+              id: device.deviceBarcode,
+              name: device.deviceName,
+              type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                    device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                    device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                    device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                    device.deviceName.toLowerCase().includes('light') ? 'light' :
+                    device.deviceName.toLowerCase().includes('router') ? 'wifi-router' :
+                    device.deviceName.toLowerCase().includes('ac') ? 'ac' : 'monitor',
+              brand: device.deviceName.split(' ')[0] || 'Unknown',
+              model: device.deviceModel || 'Unknown',
+              status: device.deviceStatus.toLowerCase() === 'working' ? 'working' :
+                      device.deviceStatus.toLowerCase() === 'not working' ||
+                      device.deviceStatus.toLowerCase() === 'under maintenance' ? 'not_working' : 'not_working',
+              purchaseDate: device.createdAt?.split('T')[0] || '',
+              notes: device.notes || '',
+              floorId: floor._id,
+              hallId: wing._id,
+              roomId: room._id,
+              floorName: floor.floorName,
+              hallName: wing.wingName,
+              roomName: room.roomName,
+              deviceLocation: `${floor.floorName}/${wing.wingName}/${room.roomName}`
+            }))
+          )
+        )
+      );
+      setProperties(mappedProperties);
+    } catch (err) {
+      console.error('Error fetching filtered devices:', err);
+      setError(err.response?.data?.message || 'Network error');
     }
-    if (selectedHall !== 'all' && property.hallId !== parseInt(selectedHall)) {
-      return false;
+  };
+
+  useEffect(() => {
+    if (!loading && user) {
+      fetchFilteredDevices();
     }
-    if (selectedRoom !== 'all' && property.roomId !== parseInt(selectedRoom)) {
-      return false;
+  }, [selectedFloor, selectedHall, selectedRoom, selectedDevice, floors, user]);
+
+  const halls = selectedFloor === 'all'
+    ? []
+    : floors.find(f => f._id === selectedFloor)?.wings || [];
+  const rooms = selectedHall === 'all'
+    ? []
+    : halls.find(h => h._id === selectedHall)?.rooms || [];
+
+  const filteredProperties = properties.filter((property) => {
+    if (selectedFloor !== 'all') {
+      const floor = floors.find(f => f._id === selectedFloor);
+      if (!floor || property.floorName !== floor.floorName) return false;
     }
-    if (selectedDevice !== '' && property.type !== selectedDevice) {
-      return false;
+    if (selectedHall !== 'all') {
+      const hall = halls.find(h => h._id === selectedHall);
+      if (!hall || property.hallName !== hall.wingName) return false;
     }
+    if (selectedRoom !== 'all') {
+      const room = rooms.find(r => r._id === selectedRoom);
+      if (!room || property.roomName !== room.roomName) return false;
+    }
+    if (selectedDevice && property.type !== selectedDevice) return false;
     return true;
   });
 
-  const groupedByType = Object.values(PropertyType).reduce((acc, type) => {
-    acc[type] = filteredProperties.filter(p => p.type === type);
-    return acc;
-  }, {});
+  const handlePropertySubmit = async (e) => {
+    e.preventDefault();
+    if (!newProperty.id || !newProperty.name || !newProperty.type || !newProperty.brand || 
+        !newProperty.model || !newProperty.status || !newProperty.floorId || 
+        !newProperty.hallId || !newProperty.roomId) {
+      setError('All required fields must be filled');
+      return;
+    }
 
-  const formatType = (type) => {
-    return type
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    try {
+      const floor = floors.find(f => f._id === newProperty.floorId);
+      const selectedHalls = floor?.wings || [];
+      const hall = selectedHalls.find(h => h._id === newProperty.hallId);
+      const selectedRooms = hall?.rooms || [];
+      const room = selectedRooms.find(r => r._id === newProperty.roomId);
+
+      if (!floor || !hall || !room) {
+        setError('Invalid floor, wing, or room selection');
+        return;
+      }
+
+      const payload = {
+        floorName: floor.floorName,
+        wings: [{
+          wingName: hall.wingName,
+          rooms: [{
+            roomName: room.roomName,
+            devices: [{
+              deviceBarcode: newProperty.id,
+              deviceName: newProperty.name,
+              devicePrice: 0,
+              deviceModel: newProperty.model,
+              deviceStatus: newProperty.status === 'working' ? 'working' : 'not working'
+            }]
+          }]
+        }]
+      };
+      console.log('Adding property payload:', payload);
+
+      const response = await axiosInstance.post('/createFloor', payload);
+
+      if (response.status === 201) {
+        const newProp = {
+          id: newProperty.id,
+          name: newProperty.name,
+          type: newProperty.type,
+          brand: newProperty.brand,
+          model: newProperty.model,
+          status: newProperty.status,
+          purchaseDate: newProperty.purchaseDate,
+          notes: newProperty.notes,
+          floorId: floor._id,
+          hallId: hall._id,
+          roomId: room._id,
+          floorName: floor.floorName,
+          hallName: hall.wingName,
+          roomName: room.roomName,
+          deviceLocation: `${floor.floorName}/${hall.wingName}/${room.roomName}`
+        };
+        setProperties([...properties, newProp]);
+        setIsModalOpen(false);
+        setNewProperty({
+          id: '', name: '', type: '', brand: '', model: '', status: '',
+          purchaseDate: '', notes: '', floorId: '', hallId: '', roomId: ''
+        });
+        setError('');
+      }
+    } catch (err) {
+      console.error('Error adding device:', err);
+      setError(err.response?.data?.message || 'Network error');
+    }
   };
 
-  // Handle CSV download
+  const handleEditProperty = async (updatedProperty) => {
+    try {
+      const floor = floors.find(f => f._id === updatedProperty.floorId);
+      const hall = floor?.wings.find(h => h._id === updatedProperty.hallId);
+      const room = hall?.rooms.find(r => r._id === updatedProperty.roomId);
+
+      if (!floor || !hall || !room) {
+        setError('Invalid floor, wing, or room selection');
+        return;
+      }
+
+      const payload = {
+        deviceBarcode: updatedProperty.id,
+        newFloorName: floor.floorName,
+        newWingName: hall.wingName,
+        newRoomName: room.roomName,
+        newStatus: updatedProperty.status === 'working' ? 'working' : 'not working'
+      };
+      console.log('Updating property payload:', payload);
+
+      const response = await axiosInstance.put('/update-location-status', payload);
+
+      if (response.status === 200) {
+        setProperties(properties.map(prop =>
+          prop.id === updatedProperty.id ? { ...prop, ...updatedProperty } : prop
+        ));
+        setError('');
+      }
+    } catch (err) {
+      console.error('Error updating device:', err);
+      setError(err.response?.data?.message || 'Network error');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewProperty((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      setIsModalOpen(false);
+    }
+  };
+
   const downloadCSV = () => {
-    const headers = ['ID', 'Name', 'Type', 'Brand', 'Model', 'Status', 'Purchase Date', 'Notes', 'Floor', 'Hall', 'Room'];
+    const headers = ['ID', 'Name', 'Type', 'Brand', 'Model', 'Status', 'Purchase Date', 'Notes', 'Floor', 'Wing', 'Room'];
     const csvContent = [
       headers.join(','),
-      ...filteredProperties.map(property => 
+      ...filteredProperties.map(property =>
         `"${property.id}","${property.name}","${property.type}","${property.brand}","${property.model}","${property.status}","${property.purchaseDate || ''}","${property.notes || ''}","${property.floorName}","${property.hallName}","${property.roomName}"`
       )
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -110,131 +305,135 @@ export const Inventory = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Handle CSV upload
-  const handleCSVUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      Papa.parse(file, {
-        complete: (result) => {
-          const parsedData = result.data;
-          // Skip header row
-          const properties = parsedData.slice(1).map(row => ({
-            id: row[0],
-            name: row[1],
-            type: row[2],
-            brand: row[3],
-            model: row[4],
-            status: row[5],
-            purchaseDate: row[6] || '',
-            notes: row[7] || '',
-            floorName: row[8],
-            hallName: row[9],
-            roomName: row[10]
-          }));
-          // Validate properties
-          const validProperties = properties.filter(prop => 
-            prop.id &&
-            prop.name &&
-            prop.type && Object.values(PropertyType).includes(prop.type) &&
-            prop.status && Object.values(PropertyStatus).includes(prop.status) &&
-            prop.brand &&
-            prop.model &&
-            prop.floorName &&
-            prop.hallName &&
-            prop.roomName
-          );
-          // Add logic to map floorName, hallName, roomName to IDs and save to backend
-          console.log('Valid parsed properties:', validProperties);
-        },
-        header: false,
-        skipEmptyLines: true,
-        error: (error) => {
-          console.error('CSV parsing error:', error);
-        }
-      });
-    }
-  };
+  // const handleCSVUpload = (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     Papa.parse(file, {
+  //       complete: async (result) => {
+  //         const parsedData = result.data;
+  //         const properties = parsedData.slice(1).map(row => ({
+  //           id: row[0],
+  //           name: row[1],
+  //           type: row[2],
+  //           brand: row[3],
+  //           model: row[4],
+  //           status: row[5],
+  //           purchaseDate: row[6] || '',
+  //           notes: row[7] || '',
+  //           floorName: row[8],
+  //           hallName: row[9],
+  //           roomName: row[10]
+  //         }));
+          
+  //         const validProperties = properties.filter(prop =>
+  //           prop.id && prop.name && prop.type && Object.values(PropertyType).includes(prop.type) &&
+  //           prop.status && Object.values(PropertyStatus).includes(prop.status) &&
+  //           prop.brand && prop.model && prop.floorName && prop.hallName && prop.roomName
+  //         );
 
-  // Handle new property submission
-  const handlePropertySubmit = (e) => {
-    e.preventDefault();
-    // Generate a unique ID (replace with your ID generation logic)
-    const newId = `prop-${Date.now()}`;
-    const propertyToSave = { ...newProperty, id: newId };
-    // Add logic to save new property to backend
-    console.log('New property:', propertyToSave);
-    setIsModalOpen(false);
-    setNewProperty({
-      id: '',
-      name: '',
-      type: '',
-      brand: '',
-      model: '',
-      status: '',
-      purchaseDate: '',
-      notes: '',
-      floorId: '',
-      hallId: '',
-      roomId: ''
-    });
-  };
+  //         for (const prop of validProperties) {
+  //           try {
+  //             const floor = floors.find(f => f.floorName === prop.floorName);
+  //             const hall = floor?.wings?.find(h => h.wingName === prop.hallName);
+  //             const room = hall?.rooms?.find(r => r.roomName === prop.roomName);
 
-  // Handle input change for form
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewProperty((prev) => ({ ...prev, [name]: value }));
-  };
+  //             if (!floor || !hall || !room) {
+  //               console.error('Invalid floor, wing, or room for CSV property:', prop);
+  //               continue;
+  //             }
 
-  // Handle backdrop click to close modal
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setIsModalOpen(false);
-    }
-  };
+  //             const payload = {
+  //               floorName: floor.floorName,
+  //               wings: [{
+  //                 wingName: hall.wingName,
+  //                 rooms: [{
+  //                   roomName: room.roomName,
+  //                   devices: [{
+  //                     deviceBarcode: prop.id,
+  //                     deviceName: prop.name,
+  //                     devicePrice: 0,
+  //                     deviceModel: prop.model,
+  //                     deviceStatus: prop.status === 'working' ? 'working' : 'not working'
+  //                   }]
+  //                 }]
+  //               }]
+  //             };
+  //             console.log('CSV upload payload:', payload);
+
+  //             const response = await axiosInstance.post('/createFloor', payload);
+
+  //             if (response.status === 201) {
+  //               setProperties(prev => [...prev, {
+  //                 id: prop.id,
+  //                 name: prop.name,
+  //                 type: prop.type,
+  //                 brand: prop.brand,
+  //                 model: prop.model,
+  //                 status: prop.status,
+  //                 purchaseDate: prop.purchaseDate,
+  //                 notes: prop.notes,
+  //                 floorId: floor._id,
+  //                 hallId: hall._id,
+  //                 roomId: room._id,
+  //                 floorName: prop.floorName,
+  //                 hallName: prop.hallName,
+  //                 roomName: prop.roomName,
+  //                 deviceLocation: `${prop.floorName}/${prop.hallName}/${prop.roomName}`
+  //               }]);
+  //             }
+  //           } catch (err) {
+  //             console.error('Error saving CSV property:', err);
+  //           }
+  //         }
+  //       },
+  //       header: false,
+  //       skipEmptyLines: true,
+  //       error: (error) => {
+  //         console.error('CSV parsing error:', error);
+  //       }
+  //     });
+  //   }
+  // };
 
   const modalContent = (
     <>
       <style>
         {`
           .modal-content::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, and Opera */
+            display: none;
           }
           .modal-content {
-            scrollbar-width: none; /* Firefox */
-            ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none;
+            ms-overflow-style: none;
           }
-          /* Style for the dropdown menu options */
           select.custom-select option {
-            background-color: #E5E7EB; /* bg-gray-200 */
-            color: #111827; /* text-gray-900 */
+            background-color: #E5E7EB;
+            color: #111827;
           }
           select.custom-select option:hover {
-            background-color: #D1D5DB; /* hover:bg-gray-300 */
+            background-color: #D1D5DB;
           }
-          /* Ensure borders are visible */
           .custom-border {
-            border: 1px solid rgba(209, 213, 219, 0.4) !important; /* border-gray-300/40 */
+            border: 1px solid rgba(209, 213, 219, 0.4) !important;
           }
           @media (prefers-color-scheme: dark) {
             select.custom-select option {
-              background-color: #1F2937; /* bg-gray-800 */
-              color: #FFFFFF; /* text-white */
+              background-color: #1F2937;
+              color: #FFFFFF;
             }
             select.custom-select option:hover {
-              background-color: #374151; /* hover:bg-gray-700 */
+              background-color: #374151;
             }
             .custom-border {
-              border: 1px solid rgba(255, 255, 255, 0.2) !important; /* border-white/20 */
+              border: 1px solid rgba(255, 255, 255, 0.2) !important;
             }
           }
         `}
       </style>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-[200] bg-gray-800/60 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={handleBackdropClick}
       />
-      {/* Modal Content */}
       <div
         className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4"
         onClick={(e) => e.stopPropagation()}
@@ -269,14 +468,14 @@ export const Inventory = () => {
                     ? 'bg-green-100/20 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                     : newProperty.status === PropertyStatus.NotWorking
                     ? 'bg-red-100/20 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                    : 'bg-gray-100/20 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400'
+                    : 'bg-gray-100/30 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400'
                 )}
               >
                 {newProperty.type ? propertyIcons[newProperty.type] : <Plus className="h-8 w-8" />}
               </div>
               <div>
                 <h3 className="text-lg font-medium">
-                  {newProperty.type ? formatType(newProperty.type) : 'New Property'}
+                  {newProperty.type ? newProperty.type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'New Property'}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-white/80">
                   {newProperty.brand && newProperty.model
@@ -289,7 +488,9 @@ export const Inventory = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Property Name</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Property Name
+                  </h4>
                   <input
                     type="text"
                     name="name"
@@ -300,7 +501,9 @@ export const Inventory = () => {
                   />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">ID</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Barcode
+                  </h4>
                   <input
                     type="text"
                     name="id"
@@ -314,18 +517,22 @@ export const Inventory = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Brand</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Brand
+                  </h4>
                   <input
                     type="text"
                     name="brand"
                     value={newProperty.brand}
                     onChange={handleInputChange}
-                    className="custom-border rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out"
+                    className="custom-border rounded-md p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-blue-400 transition-all duration-300 ease-in-out"
                     required
                   />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Model</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Model
+                  </h4>
                   <input
                     type="text"
                     name="model"
@@ -339,50 +546,54 @@ export const Inventory = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Device Type</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Device Type
+                  </h4>
                   <div className="relative">
                     <select
                       name="type"
                       value={newProperty.type}
                       onChange={handleInputChange}
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
-                      required
                     >
                       <option value="">Select Type</option>
                       {Object.values(PropertyType).map((type) => (
                         <option key={type} value={type}>
-                          {formatType(type)}
+                          {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Status</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Status
+                  </h4>
                   <div className="relative">
                     <select
                       name="status"
                       value={newProperty.status}
                       onChange={handleInputChange}
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
-                      required
                     >
                       <option value="">Select Status</option>
                       {Object.values(PropertyStatus).map((status) => (
                         <option key={status} value={status}>
-                          {formatType(status)}
+                          {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Purchase Date</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Purchase Date
+                  </h4>
                   <input
                     type="date"
                     name="purchaseDate"
@@ -392,7 +603,9 @@ export const Inventory = () => {
                   />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Floor</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Floor
+                  </h4>
                   <div className="relative">
                     <select
                       name="floorId"
@@ -401,23 +614,24 @@ export const Inventory = () => {
                         setNewProperty({ ...newProperty, floorId: e.target.value, hallId: '', roomId: '' })
                       }
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
-                      required
                     >
                       <option value="">Select Floor</option>
                       {floors.map((floor) => (
-                        <option key={floor.id} value={floor.id}>
-                          {floor.name}
+                        <option key={floor._id} value={floor._id}>
+                          {floor.floorName || 'Unnamed Floor'}
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Hall</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Wing
+                  </h4>
                   <div className="relative">
                     <select
                       name="hallId"
@@ -427,23 +641,24 @@ export const Inventory = () => {
                       }
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
                       disabled={!newProperty.floorId}
-                      required
                     >
-                      <option value="">Select Hall</option>
+                      <option value="">Select Wing</option>
                       {newProperty.floorId &&
                         floors
-                          .find((f) => f.id === parseInt(newProperty.floorId))
-                          ?.halls.map((hall) => (
-                            <option key={hall.id} value={hall.id}>
-                              {hall.name}
+                          .find((f) => f._id === newProperty.floorId)
+                          ?.wings?.map((wing) => (
+                            <option key={wing._id} value={wing._id}>
+                              {wing.wingName || 'Unnamed Wing'}
                             </option>
                           ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Room</h4>
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    Room
+                  </h4>
                   <div className="relative">
                     <select
                       name="roomId"
@@ -451,26 +666,27 @@ export const Inventory = () => {
                       onChange={handleInputChange}
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
                       disabled={!newProperty.hallId}
-                      required
                     >
                       <option value="">Select Room</option>
                       {newProperty.hallId &&
                         floors
-                          .find((f) => f.id === parseInt(newProperty.floorId))
-                          ?.halls.find((h) => h.id === parseInt(newProperty.hallId))
-                          ?.rooms.map((room) => (
-                            <option key={room.id} value={room.id}>
-                              {room.name}
+                          .find((f) => f._id === newProperty.floorId)
+                          ?.wings?.find((h) => h._id === newProperty.hallId)
+                          ?.rooms?.map((room) => (
+                            <option key={room._id} value={room._id}>
+                              {room.roomName || 'Unnamed Room'}
                             </option>
                           ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-white/60 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">Notes</h4>
+                <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                  Notes
+                </h4>
                 <textarea
                   name="notes"
                   value={newProperty.notes}
@@ -502,180 +718,169 @@ export const Inventory = () => {
     </>
   );
 
+  // if (loading) return <div><CardSkeleton/></div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage and track all equipment across the building
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="primary"
-            onClick={() => setIsModalOpen(true)}
-            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
-          >
-            Add Property
-          </Button>
-          {/* <label className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-purple-400/20 hover:bg-purple-500/30 text-purple-800 border-purple-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
-            Bulk Upload
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={handleCSVUpload}
-            />
-          </label> */}
-          <a
-            href="data:text/csv;charset=utf-8,ID,Name,Type,Brand,Model,Status,Purchase Date,Notes,Floor,Hall,Room\nPROP001,Example Monitor,monitor,BrandX,ModelY,working,2023-01-01,Sample note,Floor 1,Hall A,Room 101"
-            download="property_template.csv"
-            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
-          >
-            Download Template
-          </a>
-          <Button
-            variant="outline"
-            onClick={downloadCSV}
-            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-teal-400/20 hover:bg-teal-500/30 text-teal-800 border-teal-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
-          >
-            Download CSV
-          </Button>
-        </div>
+<div className="space-y-8 p-6">
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="flex flex-col gap-2 w-full sm:w-auto">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory</h1>
+      <div className="relative w-full sm:w-64">
+        <input
+          type="search"
+          name="search"
+          id="search"
+          placeholder="Search properties..."
+          className="pl-3 pr-10 py-1.5 text-xs sm:pl-4 sm:pr-12 sm:py-2 sm:text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out w-full animate-border-blink"
+          onChange={(e) => handleSearch(e.target.value)} // Add your search handler here
+        />
+        <svg
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
       </div>
-
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label 
-              htmlFor="floor-filter" 
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Floor
-            </label>
-            <select
-              id="floor-filter"
-              value={selectedFloor}
-              onChange={(e) => {
-                setSelectedFloor(e.target.value);
-                setSelectedHall('all');
-                setSelectedRoom('all');
-                setSelectedDevice('');
-              }}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Floors</option>
-              {floors.map(floor => (
-                <option key={floor.id} value={floor.id}>
-                  {floor.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label 
-              htmlFor="hall-filter" 
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Hall/Wing
-            </label>
-            <select
-              id="hall-filter"
-              value={selectedHall}
-              onChange={(e) => {
-                setSelectedHall(e.target.value);
-                setSelectedRoom('all');
-                setSelectedDevice('');
-              }}
-              disabled={selectedFloor === 'all'}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              <option value="all">All Halls/Wings</option>
-              {halls.map(hall => (
-                <option key={hall.id} value={hall.id}>
-                  {hall.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label 
-              htmlFor="room-filter" 
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Room
-            </label>
-            <select
-              id="room-filter"
-              value={selectedRoom}
-              onChange={(e) => {
-                setSelectedRoom(e.target.value);
-                setSelectedDevice('');
-              }}
-              disabled={selectedHall === 'all'}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              <option value="all">Select Room</option>
-              {rooms.map(room => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label 
-              htmlFor="device-filter" 
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Device Type
-            </label>
-            <select
-              id="device-filter"
-              value={selectedDevice}
-              onChange={(e) => setSelectedDevice(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Device Type</option>
-              {Object.values(PropertyType).map((type) => (
-                <option key={type} value={type}>
-                  {formatType(type)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Add Property Modal */}
-      {isModalOpen && createPortal(modalContent, document.body)}
-
-      <PropertyList 
-        properties={filteredProperties} 
-        title={`Inventory${
-          selectedFloor !== 'all' 
-            ? ` - ${floors.find(f => f.id === parseInt(selectedFloor))?.name}` 
-            : ''
-        }${
-          selectedHall !== 'all' 
-            ? ` ${halls.find(h => h.id === parseInt(selectedHall))?.name}` 
-            : ''
-        }${
-          selectedRoom !== 'all' 
-            ? ` ${rooms.find(r => r.id === parseInt(selectedRoom))?.name}` 
-            : ''
-        }${
-          selectedDevice !== '' 
-            ? ` ${formatType(selectedDevice)}` 
-            : ''
-        }`}
-      />
     </div>
+    <div className="flex flex-wrap gap-2">
+      <Button
+        variant="primary"
+        onClick={() => setIsModalOpen(true)}
+        className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
+      >
+        Add Property
+      </Button>
+      <Button
+        variant="outline"
+        onClick={downloadCSV}
+        className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-teal-400/20 hover:bg-teal-500/30 text-teal-800 border-teal-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
+      >
+        Download CSV
+      </Button>
+    </div>
+  </div>
+
+  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <label
+          htmlFor="floor-filter"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          Floor
+        </label>
+        <select
+          id="floor-filter"
+          value={selectedFloor}
+          onChange={(e) => {
+            setSelectedFloor(e.target.value);
+            setSelectedHall('all');
+            setSelectedRoom('all');
+          }}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All Floors</option>
+          {floors.map(floor => (
+            <option key={floor._id} value={floor._id}>
+              {floor.floorName || 'Unnamed Floor'}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label
+          htmlFor="hall-filter"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          Wing
+        </label>
+        <select
+          id="hall-filter"
+          value={selectedHall}
+          onChange={(e) => {
+            setSelectedHall(e.target.value);
+            setSelectedRoom('all');
+          }}
+          disabled={selectedFloor === 'all'}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          <option value="all">All Wings</option>
+          {halls.map(wing => (
+            <option key={wing._id} value={wing._id}>
+              {wing.wingName || 'Unnamed Wing'}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label
+          htmlFor="room-filter"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          Room
+        </label>
+        <select
+          id="room-filter"
+          value={selectedRoom}
+          onChange={(e) => {
+            setSelectedRoom(e.target.value);
+          }}
+          disabled={selectedHall === 'all'}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          <option value="all">All Rooms</option>
+          {rooms.map(room => (
+            <option key={room._id} value={room._id}>
+              {room.roomName || 'Unnamed Room'}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label
+          htmlFor="device-filter"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          Device Type
+        </label>
+        <select
+          id="device-filter"
+          value={selectedDevice}
+          onChange={(e) => setSelectedDevice(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Device Types</option>
+          {Object.values(PropertyType).map((type) => (
+            <option key={type} value={type}>
+              {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  {isModalOpen && createPortal(modalContent, document.body)}
+
+  <PropertyList
+    properties={filteredProperties}
+    title={`Inventory${selectedFloor !== 'all' ? ` - ${floors.find(f => f._id === selectedFloor)?.floorName}` : ''}${selectedHall !== 'all' ? ` ${halls.find(h => h._id === selectedHall)?.wingName}` : ''}${selectedRoom !== 'all' ? ` ${rooms.find(r => r._id === selectedRoom)?.roomName}` : ''}${selectedDevice !== '' ? ` ${selectedDevice.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}` : ''}`}
+    onEdit={handleEditProperty}
+    enableEdit={true}
+  />
+</div>
   );
 };
