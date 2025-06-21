@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Navbar } from './Navbar';
-import { Sidebar } from './Sidebar';
-import { cn } from '../../utils/cn';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from "react";
+import { Navbar } from "./Navbar";
+import { Sidebar } from "./Sidebar";
+import { cn } from "../../utils/cn";
+import { useAuth } from "../../context/AuthContext";
 
 export const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -28,8 +28,8 @@ export const Layout = ({ children }) => {
 
         <main
           className={cn(
-            'flex-1 overflow-auto transition-all duration-300',
-            user ? 'lg:pl' : ''
+            "flex-1 overflow-auto transition-all duration-300",
+            user ? "lg:pl" : ""
           )}
           onClick={handleMainContentClick}
         >
@@ -50,12 +50,3 @@ export const Layout = ({ children }) => {
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
