@@ -192,7 +192,7 @@ const getDeviceById = async (req, res) => {
 };
 
 module.exports = {
-  createFloor,
+  createOrUpdateFloor,
   getAllFloors,
   filterByfloors,
   getDeviceById,
