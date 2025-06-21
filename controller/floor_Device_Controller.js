@@ -276,9 +276,9 @@ const updateDeviceLocationAndStatus = async (req, res) => {
   }
 };
 module.exports = {
-  createOrUpdateFloor,
   getAllFloors,
   filterByfloors,
   getDeviceById,
   createOrUpdateFloor,
+  updateDeviceLocationAndStatus
 };
