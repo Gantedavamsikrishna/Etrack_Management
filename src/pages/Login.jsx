@@ -66,7 +66,7 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-green-900 flex items-center justify-center dark:bg-gray-900 p-4">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 animate-fade-in">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-900 mb-4">
@@ -146,12 +146,7 @@ export const Login = () => {
           </Button>
         </form>
 
-        <Button
-          onClick={testToast}
-          className="w-full mt-4 bg-gray-500 hover:bg-gray-600"
-        >
-          Test Toast
-        </Button>
+        
       </div>
     </div>
   );

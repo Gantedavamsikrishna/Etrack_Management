@@ -1,12 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PropertyList } from '../components/property/PropertyList';
 import { buildingData } from '../data/mockData';
 import { PropertyType, PropertyStatus } from '../types';
 import Papa from 'papaparse';
-import { Plus, X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent, ChevronDown } from 'lucide-react';
+import { Plus, X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent, ChevronDown, CheckCircle, Download, AlertCircle } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { Button } from '../components/ui/Button';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={cn(
+      'fixed top-4 right-4 z-[300] px-4 py-2 rounded-md shadow-lg flex items-center gap-2',
+      type === 'success' ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white',
+      'animate-slide-in-right'
+    )}>
+      {type === 'success' ? (
+        <CheckCircle className="h-5 w-5" />
+      ) : (
+        <AlertCircle className="h-5 w-5" />
+      )}
+      <span className="text-sm">{message}</span>
+      <button
+        onClick={onClose}
+        className="ml-2 p-1 hover:bg-white/20 rounded-full"
+        aria-label="Close toast"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+};
 
 const propertyIcons = {
   "monitor": <Monitor className="h-8 w-8" />,
@@ -37,6 +69,16 @@ export const Inventory = () => {
     hallId: '',
     roomId: ''
   });
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   const allProperties = buildingData.floors.flatMap(floor => 
     floor.halls.flatMap(hall => 
@@ -62,7 +104,6 @@ export const Inventory = () => {
     ? []
     : halls.find(h => h.id === parseInt(selectedHall))?.rooms || [];
 
-  // Apply filters
   const filteredProperties = allProperties.filter((property) => {
     if (selectedFloor !== 'all' && property.floorId !== parseInt(selectedFloor)) {
       return false;
@@ -79,11 +120,6 @@ export const Inventory = () => {
     return true;
   });
 
-  const groupedByType = Object.values(PropertyType).reduce((acc, type) => {
-    acc[type] = filteredProperties.filter(p => p.type === type);
-    return acc;
-  }, {});
-
   const formatType = (type) => {
     return type
       .split('-')
@@ -91,7 +127,6 @@ export const Inventory = () => {
       .join(' ');
   };
 
-  // Handle CSV download
   const downloadCSV = () => {
     const headers = ['ID', 'Name', 'Type', 'Brand', 'Model', 'Status', 'Purchase Date', 'Notes', 'Floor', 'Hall', 'Room'];
     const csvContent = [
@@ -108,16 +143,15 @@ export const Inventory = () => {
     a.download = 'inventory_export.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+    addToast('CSV downloaded successfully', 'success');
   };
 
-  // Handle CSV upload
   const handleCSVUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       Papa.parse(file, {
         complete: (result) => {
           const parsedData = result.data;
-          // Skip header row
           const properties = parsedData.slice(1).map(row => ({
             id: row[0],
             name: row[1],
@@ -131,7 +165,6 @@ export const Inventory = () => {
             hallName: row[9],
             roomName: row[10]
           }));
-          // Validate properties
           const validProperties = properties.filter(prop => 
             prop.id &&
             prop.name &&
@@ -143,25 +176,27 @@ export const Inventory = () => {
             prop.hallName &&
             prop.roomName
           );
-          // Add logic to map floorName, hallName, roomName to IDs and save to backend
           console.log('Valid parsed properties:', validProperties);
+          addToast('CSV uploaded successfully', 'success');
         },
         header: false,
         skipEmptyLines: true,
         error: (error) => {
           console.error('CSV parsing error:', error);
+          addToast('Failed to upload CSV', 'error');
         }
       });
     }
   };
 
-  // Handle new property submission
   const handlePropertySubmit = (e) => {
     e.preventDefault();
-    // Generate a unique ID (replace with your ID generation logic)
+    if (!newProperty.id || !newProperty.name || !newProperty.type || !newProperty.brand || !newProperty.model || !newProperty.status || !newProperty.floorId || !newProperty.hallId || !newProperty.roomId) {
+      addToast('Please fill in all required fields', 'error');
+      return;
+    }
     const newId = `prop-${Date.now()}`;
     const propertyToSave = { ...newProperty, id: newId };
-    // Add logic to save new property to backend
     console.log('New property:', propertyToSave);
     setIsModalOpen(false);
     setNewProperty({
@@ -177,15 +212,14 @@ export const Inventory = () => {
       hallId: '',
       roomId: ''
     });
+    addToast('Property added successfully', 'success');
   };
 
-  // Handle input change for form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewProperty((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle backdrop click to close modal
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       setIsModalOpen(false);
@@ -197,44 +231,53 @@ export const Inventory = () => {
       <style>
         {`
           .modal-content::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, and Opera */
+            display: none;
           }
           .modal-content {
-            scrollbar-width: none; /* Firefox */
-            ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none;
+            ms-overflow-style: none;
           }
-          /* Style for the dropdown menu options */
           select.custom-select option {
-            background-color: #E5E7EB; /* bg-gray-200 */
-            color: #111827; /* text-gray-900 */
+            background-color: #E5E7EB;
+            color: #111827;
           }
           select.custom-select option:hover {
-            background-color: #D1D5DB; /* hover:bg-gray-300 */
+            background-color: #D1D5DB;
           }
-          /* Ensure borders are visible */
           .custom-border {
-            border: 1px solid rgba(209, 213, 219, 0.4) !important; /* border-gray-300/40 */
+            border: 1px solid rgba(209, 213, 219, 0.4) !important;
           }
           @media (prefers-color-scheme: dark) {
             select.custom-select option {
-              background-color: #1F2937; /* bg-gray-800 */
-              color: #FFFFFF; /* text-white */
+              background-color: #1F2937;
+              color: #FFFFFF;
             }
             select.custom-select option:hover {
-              background-color: #374151; /* hover:bg-gray-700 */
+              background-color: #374151;
             }
             .custom-border {
-              border: 1px solid rgba(255, 255, 255, 0.2) !important; /* border-white/20 */
+              border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }
+          }
+          .animate-slide-in-right {
+            animation: slide-in-right 0.3s ease-in-out;
+          }
+          @keyframes slide-in-right {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
             }
           }
         `}
       </style>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-[200] bg-gray-800/60 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={handleBackdropClick}
       />
-      {/* Modal Content */}
       <div
         className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4"
         onClick={(e) => e.stopPropagation()}
@@ -519,18 +562,11 @@ export const Inventory = () => {
           >
             Add Property
           </Button>
-          {/* <label className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-purple-400/20 hover:bg-purple-500/30 text-purple-800 border-purple-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
-            Bulk Upload
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={handleCSVUpload}
-            />
-          </label> */}
+          
           <a
             href="data:text/csv;charset=utf-8,ID,Name,Type,Brand,Model,Status,Purchase Date,Notes,Floor,Hall,Room\nPROP001,Example Monitor,monitor,BrandX,ModelY,working,2023-01-01,Sample note,Floor 1,Hall A,Room 101"
             download="property_template.csv"
+            onClick={() => addToast('Template downloaded successfully', 'success')}
             className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
           >
             Download Template
@@ -653,8 +689,18 @@ export const Inventory = () => {
         </div>
       </div>
 
-      {/* Add Property Modal */}
       {isModalOpen && createPortal(modalContent, document.body)}
+      {toasts.map((toast) => (
+        createPortal(
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />,
+          document.body
+        )
+      ))}
 
       <PropertyList 
         properties={filteredProperties} 

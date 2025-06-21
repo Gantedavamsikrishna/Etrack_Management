@@ -1,8 +1,4 @@
-<<<<<<< HEAD
- 
 
-=======
->>>>>>> fc3c5d9df28f09c43fd8d338adbabd28a872d888
 import React, { useState } from "react";
 import {
   Card,
@@ -350,12 +346,12 @@ const AdminDetails = () => {
 
             <button
               onClick={() => setSelectedAdmin(null)}
-<<<<<<< HEAD
+
               className="w-full mt-6 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105  duration-300 rounded-lg" >
-=======
-              className="w-full mt-6 px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out rounded-md"
-            >
->>>>>>> fc3c5d9df28f09c43fd8d338adbabd28a872d888
+
+            
+            
+
               Close
             </button>
           </div>
