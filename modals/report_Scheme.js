@@ -11,7 +11,6 @@ const reportSchema = new mongoose.Schema({
   },
   deviceStatus: {
     type: String,
-    enum: ["active", "inactive", "maintenance"],
     default: "active",
   },
 });

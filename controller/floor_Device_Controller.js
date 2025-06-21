@@ -1,23 +1,87 @@
 const Floor = require("../modals/floors_Devices_Scheme");
 
-// Create a new floor
-const createFloor = async (req, res) => {
+const createOrUpdateFloor = async (req, res) => {
   try {
-    const { floorName, wings } = req.body;
-    const newFloor = new Floor({
-      floorName,
-      wings,
-    });
-    await newFloor.save();
-    res.status(201).json({
-      message: "Floor data inserted successfully",
-      floor: newFloor,
+    const { floorName, wingName, roomName, devices } = req.body;
+
+    if (
+      !floorName ||
+      !wingName ||
+      !roomName ||
+      !devices ||
+      !Array.isArray(devices)
+    ) {
+      return res.status(400).json({
+        message: "All fields are required and devices must be an array.",
+      });
+    }
+
+    // 1. Check if floor exists
+    let floor = await Floor.findOne({ floorName });
+
+    if (!floor) {
+      // Floor doesn't exist → create new
+      floor = new Floor({
+        floorName,
+        wings: [
+          {
+            wingName,
+            rooms: [
+              {
+                roomName,
+                devices,
+              },
+            ],
+          },
+        ],
+      });
+      await floor.save();
+      return res.status(201).json({
+        message: "New floor, wing, room, and devices created.",
+        floor,
+      });
+    }
+
+    // 2. Floor exists → check wing
+    let wing = floor.wings.find((w) => w.wingName === wingName);
+    if (!wing) {
+      // Wing not found → add new wing
+      floor.wings.push({
+        wingName,
+        rooms: [
+          {
+            roomName,
+            devices,
+          },
+        ],
+      });
+    } else {
+      // 3. Wing exists → check room
+      let room = wing.rooms.find((r) => r.roomName === roomName);
+      if (!room) {
+        // Room not found → add new room
+        wing.rooms.push({
+          roomName,
+          devices,
+        });
+      } else {
+        // 4. Room exists → append devices
+        room.devices.push(...devices);
+      }
+    }
+
+    await floor.save();
+
+    res.status(200).json({
+      message: "Floor updated successfully.",
+      floor,
     });
   } catch (error) {
-    console.error("Error creating floor:", error);
+    console.error("Error updating/creating floor:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 //get all floors data
 const getAllFloors = async (req, res) => {
   try {
@@ -212,9 +276,9 @@ const updateDeviceLocationAndStatus = async (req, res) => {
   }
 };
 module.exports = {
-  createFloor,
+  createOrUpdateFloor,
   getAllFloors,
   filterByfloors,
   getDeviceById,
-  updateDeviceLocationAndStatus,
+  createOrUpdateFloor,
 };
