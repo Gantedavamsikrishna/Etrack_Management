@@ -135,8 +135,7 @@ export const Login = () => {
     };
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError("");
 
     if (!email || !password) {
@@ -158,7 +157,6 @@ export const Login = () => {
   };
 
   return (
-    // <div className="min-h-screen flex flex-col lg:flex-row bg-gray-100 dark:bg-gray-900 relative overflow-hidden login-container">
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 relative overflow-hidden login-container">
       {/* Animated Gradient Background with Icon Grid */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-200 via-teal-100 to-purple-200 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900 animate-gradient-bg">
@@ -180,44 +178,6 @@ export const Login = () => {
           ))}
         </div>
       </div>
-
-      {/* Left Side: Project Content */}
-      {/* <div className="lg:w-1/2 flex flex-col justify-center p-8 lg:p-16 text-center lg:text-left animate-slide-left relative z-10">
-        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
-          ETrack: Property Management System
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto lg:mx-0">
-          Effortlessly track item status, monitor working/not working
-          conditions, and report issues in real-time.
-        </p>
-        <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-          <div className="flex items-center gap-3 animate-fade-in-delayed">
-            <CheckCircle className="h-6 w-6 text-teal-500 animate-pulse" />
-            <span className="text-gray-800 dark:text-gray-200">
-              Real-time Item Tracking
-            </span>
-          </div>
-
-          <div
-            className="flex items-center gap-3 animate-fade-in-delayed"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <AlertTriangle className="h-6 w-6 text-red-500 animate-bounce-subtle" />
-            <span className="text-gray-800 dark:text-gray-200">
-              Instant Issue Reporting
-            </span>
-          </div>
-          <div
-            className="flex items-center gap-3 animate-fade-in-delayed"
-            style={{ animationDelay: "0.4s" }}
-          >
-            <Wrench className="h-6 w-6 text-indigo-500 animate-rotate-subtle" />
-            <span className="text-gray-800 dark:text-gray-200">
-              Maintenance Management
-            </span>
-          </div>
-        </div>
-      </div> */}
 
       {/* Right Side: Login Form */}
       <div className="lg:w-1/2 flex items-center justify-center p-8 lg:p-16 relative z-10">
@@ -250,7 +210,7 @@ export const Login = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
             <div className="animate-fade-in-delayed">
               <label
                 htmlFor="email"
@@ -274,9 +234,6 @@ export const Login = () => {
                   placeholder="user@example.com"
                 />
               </div>
-              {/* <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Demo: admin@example.com / user@example.com
-              </p> */}
             </div>
 
             <div className="animate-fade-in-delayed">
@@ -302,20 +259,17 @@ export const Login = () => {
                   placeholder="••••••••"
                 />
               </div>
-              {/* <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Demo: admin123 / user123
-              </p> */}
             </div>
 
             <Button
-              type="submit"
+              onClick={handleSubmit}
               isLoading={isLoading}
               className="w-full bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-700 hover:to-teal-600 text-white font-semibold rounded-md py-3 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] relative overflow-hidden group"
             >
               <span className="absolute inset-0 bg-white/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center"></span>
               <span className="relative z-10">Sign in</span>
             </Button>
-          </form>
+          </div>
         </div>
       </div>
     </div>
