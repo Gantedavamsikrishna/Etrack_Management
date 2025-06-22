@@ -7,16 +7,18 @@ import { StatusChart } from '../components/charts/StatusChart';
 import { PropertyTypeChart } from '../components/charts/PropertyTypeChart';
 import { LocationChart } from '../components/charts/LocationChart';
 import { useAuth } from '../context/AuthContext';
+import WifiLoader from '../utils/Loader.jsx';
 
 export const Floor = () => {
   const { floorId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [floors, setFloors] = useState([]);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
     if (!user) {
-      console.log('No user, redirecting to login');
+      console.log('No user, redirecting to login'); // Debug: Log no user
       navigate('/login');
       return;
     }
@@ -40,21 +42,26 @@ export const Floor = () => {
               rooms: (wing.rooms || []).map((room, roomIndex) => ({
                 id: roomIndex.toString(), // Use index as ID
                 name: room.roomName,
-                properties: (room.devices || []).flatMap(device => 
-                  Array(device.count || 1).fill().map(() => ({
-                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
-                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
-                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
-                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
-                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
-                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
-                          device.deviceName.toLowerCase().includes('light') ? 'light' :
-                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
-                    brand: device.deviceName.split(' ')[0] || 'Unknown',
-                    model: device.deviceModel || 'Unknown',
-                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
-                  }))
-                )
+                properties: (room.devices || []).map(device => ({
+                  id: device.deviceBarcode,
+                  name: device.deviceName,
+                  type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                        device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                        device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                        device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                        device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                        device.deviceName.toLowerCase().includes('light') ? 'light' :
+                        device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                  brand: device.deviceName.split(' ')[0] || 'Unknown',
+                  model: device.deviceModel || 'Unknown',
+                  status: device.deviceStatus.toLowerCase() === 'working' ? 'working' : 'not_working',
+                  price: device.devicePrice || 0,
+                  floorName: floor.floorName || 'Unknown',
+                  wingName: wing.wingName || 'Unknown',
+                  roomName: room.roomName || 'Unknown',
+                  deviceLocation: `${floor.floorName || 'Unknown'}/${wing.wingName || 'Unknown'}/${room.roomName || 'Unknown'}`,
+                  purchaseDate: device.createdAt?.split('T')[0] || ''
+                }))
               }))
             }))
           }));
@@ -65,6 +72,8 @@ export const Floor = () => {
         }
       } catch (error) {
         console.error('Error fetching floors:', error);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
 
@@ -76,17 +85,13 @@ export const Floor = () => {
   console.log('Selected Floor:', floor); // Debug: Log found floor
   console.log('Hall IDs:', floor?.halls.map(h => h.id)); // Debug: Log available hall IDs
 
-  if (!floor) {
+  if (loading || !floor) { // Include loading check
     console.log('Floor not found:', { floorExists: !!floor }); // Debug: Log why condition failed
     return (
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <p className="text-red-500">Floor not found</p>
-        <Link 
-          to="/" 
-          className="mt-4 inline-flex items-center text-primary-600 dark:text-primary-400 hover:underline"
-        >
-          Return to Dashboard
-        </Link>
+        <div className="h-[520px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <WifiLoader className="scale-[2]" />
+        </div>
       </div>
     );
   }
@@ -119,10 +124,10 @@ export const Floor = () => {
       </nav>
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        {/* <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {floor.name}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        </h1> */}
+        <p className="text-gray-600 dark:text-gray-400 mt-1 text-xl">
           Overview and management of all halls in this floor
         </p>
       </div>
@@ -236,6 +241,7 @@ export const Floor = () => {
         <PropertyList 
           properties={allProperties} 
           title={`All Properties in ${floor.name}`} 
+          enableEdit={false} // Disable editing
         />
       )}
     </div>

@@ -13,7 +13,7 @@ export const Room = () => {
   const { user } = useAuth();
 
   const [floors, setFloors] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ Loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -43,38 +43,39 @@ export const Room = () => {
               rooms: (wing.rooms || []).map((room, roomIndex) => ({
                 id: roomIndex.toString(),
                 name: room.roomName,
-                properties: (room.devices || []).flatMap((device) =>
-                  Array(device.count || 1)
-                    .fill()
-                    .map(() => ({
-                      id: `${device.deviceName}-${Math.random()
-                        .toString(36)
-                        .substr(2, 9)}`,
-                      type: device.deviceName.toLowerCase().includes("monitor")
-                        ? "monitor"
-                        : device.deviceName.toLowerCase().includes("mouse")
-                        ? "mouse"
-                        : device.deviceName.toLowerCase().includes("fan")
-                        ? "fan"
-                        : device.deviceName.toLowerCase().includes("ac")
-                        ? "ac"
-                        : device.deviceName.toLowerCase().includes("keyboard")
-                        ? "keyboard"
-                        : device.deviceName.toLowerCase().includes("light")
-                        ? "light"
-                        : device.deviceName
-                            .toLowerCase()
-                            .includes("wifi-router")
-                        ? "wifi-router"
-                        : "unknown",
-                      brand: device.deviceName.split(" ")[0] || "Unknown",
-                      model: device.deviceModel || "Unknown",
-                      status:
-                        device.deviceStatus === "working"
-                          ? "working"
-                          : "not_working",
-                    }))
-                ),
+                properties: (room.devices || []).map((device) => ({
+                  id: device.deviceBarcode,
+                  name: device.deviceName,
+                  type: device.deviceName.toLowerCase().includes("monitor")
+                    ? "monitor"
+                    : device.deviceName.toLowerCase().includes("mouse")
+                    ? "mouse"
+                    : device.deviceName.toLowerCase().includes("fan")
+                    ? "fan"
+                    : device.deviceName.toLowerCase().includes("ac")
+                    ? "ac"
+                    : device.deviceName.toLowerCase().includes("keyboard")
+                    ? "keyboard"
+                    : device.deviceName.toLowerCase().includes("light")
+                    ? "light"
+                    : device.deviceName.toLowerCase().includes("wifi-router")
+                    ? "wifi-router"
+                    : "unknown",
+                  brand: device.deviceName.split(" ")[0] || "Unknown",
+                  model: device.deviceModel || "Unknown",
+                  status:
+                    device.deviceStatus.toLowerCase() === "working"
+                      ? "working"
+                      : "not_working",
+                  price: device.devicePrice || 0,
+                  floorName: floor.floorName || "Unknown",
+                  wingName: wing.wingName || "Unknown",
+                  roomName: room.roomName || "Unknown",
+                  deviceLocation: `${floor.floorName || "Unknown"}/${
+                    wing.wingName || "Unknown"
+                  }/${room.roomName || "Unknown"}`,
+                  purchaseDate: device.createdAt?.split("T")[0] || "",
+                })),
               })),
             })),
           }));
@@ -86,29 +87,21 @@ export const Room = () => {
       } catch (error) {
         console.error("Error fetching floors:", error);
       } finally {
-        setLoading(false); // ✅ Stop loading
+        setLoading(false);
       }
     };
 
     fetchFloors();
   }, [user, navigate]);
 
-  // ✅ Show loader while fetching data
   if (loading) {
     return (
-      <div className="h-[700px] w-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <WifiLoader className="scale-[2.5]" />
-        <p
-          className="text-gray-700 dark:text-gray-200 text-xl font-semibold mt-6"
-          style={{ color: "red" }}
-        >
-          Dey Adukku thinevada Agara kasepu data vasthundhi....
-        </p>
+      <div className="h-[550px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <WifiLoader className="scale-[2]" />
       </div>
     );
   }
 
-  // ✅ Room lookup after loading
   const floor = floors.find((f) => f.id === parseInt(floorId));
   const hall = floor?.halls?.find((h) => h.id === parseInt(hallId).toString());
   const room = hall?.rooms?.find((r) => r.id === parseInt(roomId).toString());
@@ -150,7 +143,7 @@ export const Room = () => {
 
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {floor.name} {hall.name} {room.name}
+          {floor.name}/{hall.name}/{room.name}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           View properties in this room

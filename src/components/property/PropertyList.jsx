@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PropertyCard } from './PropertyCard';
 import { PropertyModal } from './PropertyModal';
+import WifiLoader from '../../utils/Loader';
 
 const PropertyType = {
   Monitor: 'monitor',
@@ -14,8 +15,8 @@ const PropertyType = {
 
 const PropertyStatus = {
   Working: 'working',
-  NotWorking: 'not working',
-  UnderMaintenance: 'under maintenance',
+  NotWorking: 'not_working',
+  // UnderMaintenance: 'under_maintenance',
 };
 
 export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelete, enableEdit = true }) => {
@@ -52,17 +53,23 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
   };
 
   const filteredProperties = properties.filter((property) => {
-    if (filterType !== 'all' && property.deviceName !== filterType) {
+    // Filter by type
+    if (filterType !== 'all' && property.type !== filterType) {
       return false;
     }
-    if (filterStatus !== 'all' && property.deviceStatus !== filterStatus) {
-      return false;
+    // Filter by status
+    if (filterStatus !== 'all') {
+      // Map data status to enum for comparison
+      const normalizedStatus = property.status === 'working' ? 'working' : 'not_working';
+      if (normalizedStatus !== filterStatus) {
+        return false;
+      }
     }
     return true;
   });
 
   const propertyCounts = properties.reduce((acc, property) => {
-    acc[property.deviceName] = (acc[property.deviceName] || 0) + 1;
+    acc[property.type] = (acc[property.type] || 0) + 1;
     return acc;
   }, {});
 
@@ -73,7 +80,7 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
       <div className="flex flex-col sm:flex-row sm:items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
         <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-          <select
+          {/* <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -81,10 +88,10 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
             <option value="all">All Types ({allCount})</option>
             {Object.values(PropertyType).map((type) => (
               <option key={type} value={type}>
-                {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')} ({propertyCounts[type] || 0})
+                {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} ({propertyCounts[type] || 0})
               </option>
             ))}
-          </select>
+          </select> */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -93,10 +100,7 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
             <option value="all">All Status</option>
             {Object.values(PropertyStatus).map((status) => (
               <option key={status} value={status}>
-                {status
-                  .split('_')
-                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(' ')}
+                {status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
               </option>
             ))}
           </select>
@@ -104,13 +108,15 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
       </div>
       {filteredProperties.length === 0 ? (
         <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-gray-500 dark:text-gray-400">No devices found with the selected filters.</p>
+          <div className="h-[250px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <WifiLoader className="scale-[2]" />
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProperties.map((property) => (
             <PropertyCard
-              key={property.deviceBarcode}
+              key={property.id}
               property={property}
               onClick={() => handlePropertyClick(property)}
             />
@@ -133,7 +139,7 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
               Confirm Deletion
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Are you sure you want to delete the device "{propertyToDelete.deviceName}" (Barcode: {propertyToDelete.deviceBarcode})?
+              Are you sure you want to delete the device "{propertyToDelete.name}" (Barcode: {propertyToDelete.id})?
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button

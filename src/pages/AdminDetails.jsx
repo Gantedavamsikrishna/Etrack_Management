@@ -76,8 +76,11 @@ const AdminDetails = () => {
   return (
     <div className="px-4 py-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {loading ? (
-        <div className="flex justify-center items-center min-h-screen">
-          <WifiLoader />
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <div className="h-[520px] w-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <WifiLoader className="scale-[2]" />
+           
+          </div>
         </div>
       ) : (
         <>
@@ -96,7 +99,6 @@ const AdminDetails = () => {
               + Add Admin User
             </button>
           </div>
-
           {/* Admin Cards */}
           <div className="grid gap-8 md:grid-cols-2 mt-4">
             {admins.length > 0 ? (

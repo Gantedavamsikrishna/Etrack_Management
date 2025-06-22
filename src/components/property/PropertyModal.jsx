@@ -14,21 +14,23 @@ const propertyIcons = {
   "ac": <AirVent className="h-8 w-8" />,
 };
 
-export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) => {
+export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     status: property.status || 'working',
     id: property.id || '',
-    location: property.deviceLocation || '',
+    location: property.deviceLocation || 
+              (property.floorName && property.wingName && property.roomName 
+                ? `${property.floorName} / ${property.wingName} / ${property.roomName}`
+                : ''),
   });
 
   console.log('PropertyModal property:', property); // Debug prop
 
   const formatType = (type) => {
     return type
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      ? type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      : 'Unknown';
   };
 
   const handleEdit = () => {
@@ -47,10 +49,16 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
       deviceLocation: formData.location, // Ensure deviceLocation is updated
     };
     console.log('Saving updated property:', updatedProperty); // Debug save
-    onEdit(updatedProperty);
-    // Do not close modal to show updated values
+    if (onEdit) {
+      onEdit(updatedProperty);
+    }
     setIsEditing(false);
   };
+
+  // Derive location display
+  const displayLocation = property.floorName && property.wingName && property.roomName
+    ? `${property.floorName} / ${property.wingName} / ${property.roomName}`
+    : property.deviceLocation || formData.location || 'N/A';
 
   const modalContent = (
     <>
@@ -113,7 +121,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                   ? 'bg-green-100/20 dark:bg-green-900/20 text-green-400' 
                   : 'bg-red-100/20 dark:bg-red-900/20 text-red-400'
               )}>
-                {propertyIcons[property.type]}
+                {propertyIcons[property.type] || <Monitor className="h-8 w-8" />}
               </div>
               
               <div>
@@ -121,7 +129,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                   {formatType(property.type)}
                 </h3>
                 <p className="text-xs sm:text-sm text-white/80">
-                  {property.brand} {property.model}
+                  {property.brand || 'Unknown'} {property.model || 'Unknown'}
                 </p>
               </div>
             </div>
@@ -132,13 +140,13 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                   <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
                     Brand
                   </h4>
-                  <p className="text-sm sm:text-base">{property.brand}</p>
+                  <p className="text-sm sm:text-base">{property.brand || 'N/A'}</p>
                 </div>
                 <div>
                   <h4 className="text-xs sm:text-sm font-medium text-white/80 mb-1">
                     Model
                   </h4>
-                  <p className="text-sm sm:text-base">{property.model}</p>
+                  <p className="text-sm sm:text-base">{property.model || 'N/A'}</p>
                 </div>
               </div>
 
@@ -208,11 +216,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = true }) 
                     className="border border-white/20 rounded p-2 w-full bg-white/10 dark:bg-gray-700/10 text-white text-sm focus:ring-2 focus:ring-green-400"
                   />
                 ) : (
-<p className="text-sm sm:text-base">
-  {property.floorName && property.wingName && property.roomName
-    ? `${property.floorName} / ${property.wingName} / ${property.roomName}`
-    : formData.location || property.deviceLocation || 'N/A'}
-</p>
+                  <p className="text-sm sm:text-base">{displayLocation}</p>
                 )}
               </div>
             </div>
