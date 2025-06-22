@@ -14,6 +14,7 @@ export const Hall = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [floors, setFloors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -30,68 +31,69 @@ export const Hall = () => {
           }
         });
         const data = await response.json();
-        console.log('API Response:', data); // Debug: Log raw API response
+        console.log('API Response:', data);
         if (response.ok) {
           const mappedFloors = data.map(floor => ({
             id: parseInt(floor.floorName.match(/\d+/)[0]),
             name: floor.floorName,
             halls: (floor.wings || []).map((wing, wingIndex) => ({
-              id: wingIndex.toString(), // Use index as ID
+              id: wingIndex.toString(),
               name: wing.wingName,
               rooms: (wing.rooms || []).map((room, roomIndex) => ({
-                id: roomIndex.toString(), // Use index as ID
+                id: roomIndex.toString(),
                 name: room.roomName,
-                properties: (room.devices || []).flatMap(device => 
-                  Array(device.count || 1).fill().map(() => ({
-                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
-                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
-                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
-                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
-                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
-                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
-                          device.deviceName.toLowerCase().includes('light') ? 'light' :
-                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
-                    brand: device.deviceName.split(' ')[0] || 'Unknown',
-                    model: device.deviceModel || 'Unknown',
-                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
-                  }))
-                )
+                properties: (room.devices || []).map(device => ({
+                  id: device.deviceBarcode,
+                  name: device.deviceName,
+                  type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                        device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                        device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                        device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                        device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                        device.deviceName.toLowerCase().includes('light') ? 'light' :
+                        device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                  brand: device.deviceName.split(' ')[0] || 'Unknown',
+                  model: device.deviceModel || 'Unknown',
+                  status: device.deviceStatus.toLowerCase() === 'working' ? 'working' : 'not_working',
+                  price: device.devicePrice || 0,
+                  floorName: floor.floorName || 'Unknown',
+                  wingName: wing.wingName || 'Unknown',
+                  roomName: room.roomName || 'Unknown',
+                  deviceLocation: `${floor.floorName || 'Unknown'}/${wing.wingName || 'Unknown'}/${room.roomName || 'Unknown'}`,
+                  purchaseDate: device.createdAt?.split('T')[0] || ''
+                }))
               }))
             }))
           }));
-          console.log('Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          console.log('Mapped Floors:', mappedFloors);
           setFloors(mappedFloors);
         } else {
           console.error('Failed to fetch floors:', data.message);
         }
       } catch (error) {
         console.error('Error fetching floors:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchFloors();
   }, [user, navigate]);
 
-  console.log('Params:', { floorId, hallId }); // Debug: Log URL params
+  console.log('Params:', { floorId, hallId });
   const floor = floors.find((f) => f.id === parseInt(floorId));
-  console.log('Selected Floor:', floor); // Debug: Log found floor
+  console.log('Selected Floor:', floor);
   const hall = floor?.halls.find((h) => h.id === parseInt(hallId).toString());
-  console.log('Selected Hall:', hall); // Debug: Log found hall
-  console.log('Hall IDs:', floor?.halls.map(h => h.id)); // Debug: Log available hall IDs
+  console.log('Selected Hall:', hall);
+  console.log('Hall IDs:', floor?.halls.map(h => h.id));
 
-  if (!floor || !hall) {
-    console.log('Hall not found:', { floorExists: !!floor, hallExists: !!hall }); // Debug: Log why condition failed
+  if (loading || !floor || !hall) {
+    console.log('Hall not found:', { floorExists: !!floor, hallExists: !!hall, loading });
     return (
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-       <div className="h-[520px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-      <WifiLoader className="scale-[2]" />
-       </div>
-        {/* <Link 
-          to="/" 
-          className="mt-4 inline-flex items-center text-primary-600 dark:text-primary-400 hover:underline"
-        >
-          Return to Dashboard
-        </Link> */}
+        <div className="h-[520px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <WifiLoader className="scale-[2]" />
+        </div>
       </div>
     );
   }
@@ -127,9 +129,9 @@ export const Hall = () => {
       </nav>
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {floor.name}  {hall.name}
-        </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+       {floor.name}/{hall.name}
+       </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           Overview and management of all rooms in this hall
         </p>
@@ -241,6 +243,7 @@ export const Hall = () => {
         <PropertyList 
           properties={allProperties} 
           title={`All Properties in ${hall.name}`} 
+          enableEdit={false}
         />
       )}
     </div>
