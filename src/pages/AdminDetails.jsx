@@ -16,7 +16,7 @@ const API_BASE = "https://etrack-backend.onrender.com";
 
 const AdminDetails = () => {
   const [admins, setAdmins] = useState([]);
-  const [loading, setLoading] = useState(true); // <-- new loading state
+  const [loading, setLoading] = useState(true);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ const AdminDetails = () => {
   }, []);
 
   const fetchAdmins = async () => {
-    setLoading(true); // start loading
+    setLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/admin/get`);
       const data = res.data;
@@ -47,70 +47,87 @@ const AdminDetails = () => {
       console.error("Failed to fetch admins:", err);
       setAdmins([]);
     }
-    setLoading(false); // stop loading
+    setLoading(false);
   };
 
-  // ... handleInputChange, handleClear, handleAddAdmin unchanged ...
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
+  };
+
+  const handleClear = () => {
+    setFormData({
+      adminId: "",
+      adminName: "",
+      adminEmail: "",
+      adminPassword: "",
+      adminImage: null,
+    });
+  };
+
+  const handleAddAdmin = () => {
+    // Your add admin logic here
+    console.log("Add admin clicked");
+  };
 
   return (
-    <div className="px-4 py-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-          Admin Details
-        </h1>
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setSelectedAdmin(null);
-            setShowPassword(false);
-          }}
-          className="cursor-pointer rounded-xl bg-white/10 border border-white/20 px-4 py-2 text-gray-800 dark:text-white backdrop-blur-sm shadow-md hover:bg-white/20 transition"
-        >
-          + Add Admin User
-        </button>
-      </div>
-
-      {/* Loader */}
+    <div className="px-4 py-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {loading ? (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-          <div className="h-[520px] w-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-            <WifiLoader className="scale-[2]" />
-            <p
-              className="text-gray-700 dark:text-gray-200 text-xl font-semibold mt-6"
-              style={{ color: "red" }}
-            >
-              Hey bro, wait a second, fetching data from DB...
-            </p>
-          </div>
+        <div className="flex justify-center items-center min-h-screen">
+          <WifiLoader />
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 mt-4">
-          {admins.length > 0 ? (
-            admins.map((admin) => (
-              <Card
-                key={admin._id}
-                onClick={() => setSelectedAdmin(admin)}
-                className="flex items-center gap-4 p-4 cursor-pointer bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white shadow-md hover:shadow-lg"
-              >
-                <img
-                  src={`${API_BASE}/adminImage/${admin.adminImage}`}
-                  onError={(e) => (e.target.src = defaultAvatar)}
-                  alt={admin.adminName}
-                  className="w-14 h-14 rounded-full object-cover border"
-                />
-                <div>
-                  <h3 className="text-lg font-semibold">{admin.adminName}</h3>
-                  <p className="text-sm">ID: {admin.adminId}</p>
-                </div>
-              </Card>
-            ))
-          ) : (
-            <p className="text-white/70">No admins found.</p>
-          )}
-        </div>
-      )}
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-black dark:text-white">
+              Admin Details
+            </h1>
+            <button
+              onClick={() => {
+                setShowForm(true);
+                setSelectedAdmin(null);
+                setShowPassword(false);
+              }}
+              className="cursor-pointer rounded-xl bg-white/30 dark:bg-white/10 border border-white/50 dark:border-white/20 px-4 py-2 text-black dark:text-white backdrop-blur-lg shadow-md hover:bg-white/40 dark:hover:bg-white/20 transition"
+            >
+              + Add Admin User
+            </button>
+          </div>
 
-      {/* Add Admin form + Selected admin popup stay as you had them */}
+          {/* Admin Cards */}
+          <div className="grid gap-8 md:grid-cols-2 mt-4">
+            {admins.length > 0 ? (
+              admins.map((admin) => (
+                <Card
+                  key={admin._id}
+                  onClick={() => setSelectedAdmin(admin)}
+                  className="flex items-center gap-4 p-6 m-2 cursor-pointer bg-white/30 dark:bg-white/10 backdrop-blur-lg border border-gray-300/70 dark:border-white/20 rounded-xl text-black dark:text-white shadow-lg hover:shadow-xl"
+                >
+                  <img
+                    src={`${API_BASE}/adminImage/${admin.adminImage}`}
+                    onError={(e) => (e.target.src = defaultAvatar)}
+                    alt={admin.adminName}
+                    className="w-14 h-14 rounded-full object-cover border border-gray-300/70 dark:border-white/40"
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold">{admin.adminName}</h3>
+                    <p className="text-sm text-gray-700 dark:text-white/70">
+                      ID: {admin.adminId}
+                    </p>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <p className="text-gray-700 dark:text-white/70">
+                No admins found.
+              </p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

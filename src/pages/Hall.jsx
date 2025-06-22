@@ -111,12 +111,6 @@ export const Hall = () => {
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
         <div className="h-[520px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <WifiLoader className="scale-[2]" />
-          <p
-            className="text-gray-700 dark:text-gray-200 text-xl font-semibold mt-6"
-            style={{ color: "red" }}
-          >
-            Dey Adukku thinevada Agara kasepu data vasthundhi....
-          </p>
         </div>
         {/* <Link 
           to="/" 

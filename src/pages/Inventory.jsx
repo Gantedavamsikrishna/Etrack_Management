@@ -1,4 +1,3 @@
-import '../Inventory.css';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PropertyList } from '../components/property/PropertyList';
@@ -9,9 +8,6 @@ import { cn } from '../utils/cn';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-// import { CardSkeleton } from '../utils/Loader';
-// import Papa from 'papaparse';
-
 
 const propertyIcons = {
   monitor: <Monitor className="h-8 w-8" />,
@@ -35,6 +31,7 @@ export const Inventory = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [newProperty, setNewProperty] = useState({
     id: '',
     name: '',
@@ -63,12 +60,10 @@ export const Inventory = () => {
 
     const fetchData = async () => {
       try {
-        // Fetch all floors
         const floorResponse = await axiosInstance.get('/getAllFloors');
         const floorsArray = Array.isArray(floorResponse.data) ? floorResponse.data : [];
         setFloors(floorsArray);
 
-        // Fetch filtered devices
         await fetchFilteredDevices();
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -166,11 +161,15 @@ export const Inventory = () => {
       if (!room || property.roomName !== room.roomName) return false;
     }
     if (selectedDevice && property.type !== selectedDevice) return false;
+    if (searchQuery && !property.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
-  const handlePropertySubmit = async (e) => {
-    e.preventDefault();
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  const handlePropertySubmit = async () => {
     if (!newProperty.id || !newProperty.name || !newProperty.type || !newProperty.brand || 
         !newProperty.model || !newProperty.status || !newProperty.floorId || 
         !newProperty.hallId || !newProperty.roomId) {
@@ -304,96 +303,6 @@ export const Inventory = () => {
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
-  // const handleCSVUpload = (event) => {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     Papa.parse(file, {
-  //       complete: async (result) => {
-  //         const parsedData = result.data;
-  //         const properties = parsedData.slice(1).map(row => ({
-  //           id: row[0],
-  //           name: row[1],
-  //           type: row[2],
-  //           brand: row[3],
-  //           model: row[4],
-  //           status: row[5],
-  //           purchaseDate: row[6] || '',
-  //           notes: row[7] || '',
-  //           floorName: row[8],
-  //           hallName: row[9],
-  //           roomName: row[10]
-  //         }));
-          
-  //         const validProperties = properties.filter(prop =>
-  //           prop.id && prop.name && prop.type && Object.values(PropertyType).includes(prop.type) &&
-  //           prop.status && Object.values(PropertyStatus).includes(prop.status) &&
-  //           prop.brand && prop.model && prop.floorName && prop.hallName && prop.roomName
-  //         );
-
-  //         for (const prop of validProperties) {
-  //           try {
-  //             const floor = floors.find(f => f.floorName === prop.floorName);
-  //             const hall = floor?.wings?.find(h => h.wingName === prop.hallName);
-  //             const room = hall?.rooms?.find(r => r.roomName === prop.roomName);
-
-  //             if (!floor || !hall || !room) {
-  //               console.error('Invalid floor, wing, or room for CSV property:', prop);
-  //               continue;
-  //             }
-
-  //             const payload = {
-  //               floorName: floor.floorName,
-  //               wings: [{
-  //                 wingName: hall.wingName,
-  //                 rooms: [{
-  //                   roomName: room.roomName,
-  //                   devices: [{
-  //                     deviceBarcode: prop.id,
-  //                     deviceName: prop.name,
-  //                     devicePrice: 0,
-  //                     deviceModel: prop.model,
-  //                     deviceStatus: prop.status === 'working' ? 'working' : 'not working'
-  //                   }]
-  //                 }]
-  //               }]
-  //             };
-  //             console.log('CSV upload payload:', payload);
-
-  //             const response = await axiosInstance.post('/createFloor', payload);
-
-  //             if (response.status === 201) {
-  //               setProperties(prev => [...prev, {
-  //                 id: prop.id,
-  //                 name: prop.name,
-  //                 type: prop.type,
-  //                 brand: prop.brand,
-  //                 model: prop.model,
-  //                 status: prop.status,
-  //                 purchaseDate: prop.purchaseDate,
-  //                 notes: prop.notes,
-  //                 floorId: floor._id,
-  //                 hallId: hall._id,
-  //                 roomId: room._id,
-  //                 floorName: prop.floorName,
-  //                 hallName: prop.hallName,
-  //                 roomName: prop.roomName,
-  //                 deviceLocation: `${prop.floorName}/${prop.hallName}/${prop.roomName}`
-  //               }]);
-  //             }
-  //           } catch (err) {
-  //             console.error('Error saving CSV property:', err);
-  //           }
-  //         }
-  //       },
-  //       header: false,
-  //       skipEmptyLines: true,
-  //       error: (error) => {
-  //         console.error('CSV parsing error:', error);
-  //       }
-  //     });
-  //   }
-  // };
 
   const modalContent = (
     <>
@@ -718,169 +627,168 @@ export const Inventory = () => {
     </>
   );
 
-  // if (loading) return <div><CardSkeleton/></div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-<div className="space-y-8 p-6">
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div className="flex flex-col gap-2 w-full sm:w-auto">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory</h1>
-      <div className="relative w-full sm:w-64">
-        <input
-          type="search"
-          name="search"
-          id="search"
-          placeholder="Search properties..."
-          className="pl-3 pr-10 py-1.5 text-xs sm:pl-4 sm:pr-12 sm:py-2 sm:text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out w-full animate-border-blink"
-          onChange={(e) => handleSearch(e.target.value)} // Add your search handler here
-        />
-        <svg
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+    <div className="space-y-8 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-2 w-full sm:w-auto">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory</h1>
+          <div className="relative w-full sm:w-64">
+            <input
+              type="search"
+              name="search"
+              id="search"
+              placeholder="Search properties..."
+              className="pl-3 pr-10 py-1.5 text-xs sm:pl-4 sm:pr-12 sm:py-2 sm:text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out w-full animate-border-blink"
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+            <svg
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="primary"
+            onClick={() => setIsModalOpen(true)}
+            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
+          >
+            Add Property
+          </Button>
+          <Button
+            variant="outline"
+            onClick={downloadCSV}
+            className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-teal-400/20 hover:bg-teal-500/30 text-teal-800 border-teal-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
+          >
+            Download CSV
+          </Button>
+        </div>
       </div>
+
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label
+              htmlFor="floor-filter"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Floor
+            </label>
+            <select
+              id="floor-filter"
+              value={selectedFloor}
+              onChange={(e) => {
+                setSelectedFloor(e.target.value);
+                setSelectedHall('all');
+                setSelectedRoom('all');
+              }}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Floors</option>
+              {floors.map(floor => (
+                <option key={floor._id} value={floor._id}>
+                  {floor.floorName || 'Unnamed Floor'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="hall-filter"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Wing
+            </label>
+            <select
+              id="hall-filter"
+              value={selectedHall}
+              onChange={(e) => {
+                setSelectedHall(e.target.value);
+                setSelectedRoom('all');
+              }}
+              disabled={selectedFloor === 'all'}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              <option value="all">All Wings</option>
+              {halls.map(wing => (
+                <option key={wing._id} value={wing._id}>
+                  {wing.wingName || 'Unnamed Wing'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="room-filter"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Room
+            </label>
+            <select
+              id="room-filter"
+              value={selectedRoom}
+              onChange={(e) => {
+                setSelectedRoom(e.target.value);
+              }}
+              disabled={selectedHall === 'all'}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              <option value="all">All Rooms</option>
+              {rooms.map(room => (
+                <option key={room._id} value={room._id}>
+                  {room.roomName || 'Unnamed Room'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="device-filter"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Device Type
+            </label>
+            <select
+              id="device-filter"
+              value={selectedDevice}
+              onChange={(e) => setSelectedDevice(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Device Types</option>
+              {Object.values(PropertyType).map((type) => (
+                <option key={type} value={type}>
+                  {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {isModalOpen && createPortal(modalContent, document.body)}
+
+      <PropertyList
+        properties={filteredProperties}
+        title={`Inventory${selectedFloor !== 'all' ? ` - ${floors.find(f => f._id === selectedFloor)?.floorName}` : ''}${selectedHall !== 'all' ? ` ${halls.find(h => h._id === selectedHall)?.wingName}` : ''}${selectedRoom !== 'all' ? ` ${rooms.find(r => r._id === selectedRoom)?.roomName}` : ''}${selectedDevice !== '' ? ` ${selectedDevice.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}` : ''}`}
+        onEdit={handleEditProperty}
+        enableEdit={true}
+      />
     </div>
-    <div className="flex flex-wrap gap-2">
-      <Button
-        variant="primary"
-        onClick={() => setIsModalOpen(true)}
-        className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
-      >
-        Add Property
-      </Button>
-      <Button
-        variant="outline"
-        onClick={downloadCSV}
-        className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-teal-400/20 hover:bg-teal-500/30 text-teal-800 border-teal-400/40 rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
-      >
-        Download CSV
-      </Button>
-    </div>
-  </div>
-
-  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div>
-        <label
-          htmlFor="floor-filter"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Floor
-        </label>
-        <select
-          id="floor-filter"
-          value={selectedFloor}
-          onChange={(e) => {
-            setSelectedFloor(e.target.value);
-            setSelectedHall('all');
-            setSelectedRoom('all');
-          }}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Floors</option>
-          {floors.map(floor => (
-            <option key={floor._id} value={floor._id}>
-              {floor.floorName || 'Unnamed Floor'}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label
-          htmlFor="hall-filter"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Wing
-        </label>
-        <select
-          id="hall-filter"
-          value={selectedHall}
-          onChange={(e) => {
-            setSelectedHall(e.target.value);
-            setSelectedRoom('all');
-          }}
-          disabled={selectedFloor === 'all'}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          <option value="all">All Wings</option>
-          {halls.map(wing => (
-            <option key={wing._id} value={wing._id}>
-              {wing.wingName || 'Unnamed Wing'}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label
-          htmlFor="room-filter"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Room
-        </label>
-        <select
-          id="room-filter"
-          value={selectedRoom}
-          onChange={(e) => {
-            setSelectedRoom(e.target.value);
-          }}
-          disabled={selectedHall === 'all'}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          <option value="all">All Rooms</option>
-          {rooms.map(room => (
-            <option key={room._id} value={room._id}>
-              {room.roomName || 'Unnamed Room'}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label
-          htmlFor="device-filter"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Device Type
-        </label>
-        <select
-          id="device-filter"
-          value={selectedDevice}
-          onChange={(e) => setSelectedDevice(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Device Types</option>
-          {Object.values(PropertyType).map((type) => (
-            <option key={type} value={type}>
-              {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  </div>
-
-  {isModalOpen && createPortal(modalContent, document.body)}
-
-  <PropertyList
-    properties={filteredProperties}
-    title={`Inventory${selectedFloor !== 'all' ? ` - ${floors.find(f => f._id === selectedFloor)?.floorName}` : ''}${selectedHall !== 'all' ? ` ${halls.find(h => h._id === selectedHall)?.wingName}` : ''}${selectedRoom !== 'all' ? ` ${rooms.find(r => r._id === selectedRoom)?.roomName}` : ''}${selectedDevice !== '' ? ` ${selectedDevice.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}` : ''}`}
-    onEdit={handleEditProperty}
-    enableEdit={true}
-  />
-</div>
   );
 };
