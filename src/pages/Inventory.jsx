@@ -42,7 +42,7 @@ export const Inventory = () => {
     status: '',
     price: 0, // Added devicePrice
     purchaseDate: '',
-    // notes: '',
+    notes: '',
     floorId: '',
     hallId: '',
     roomId: ''
@@ -117,7 +117,7 @@ export const Inventory = () => {
                       device.deviceStatus.toLowerCase() === 'under maintenance' ? 'not_working' : 'not_working',
               price: device.devicePrice || 0,
               purchaseDate: device.createdAt?.split('T')[0] || '',
-              // notes: device.notes || '',
+              notes: device.notes || '',
               floorId: floor._id,
               hallId: wing._id,
               roomId: room._id,
@@ -211,7 +211,7 @@ export const Inventory = () => {
           status: newProperty.status || 'working',
           price: newProperty.price || 0,
           purchaseDate: newProperty.purchaseDate || '',
-          // notes: newProperty.notes || '',
+          notes: newProperty.notes || '',
           floorId: floor._id,
           hallId: hall._id,
           roomId: room._id,
@@ -224,9 +224,7 @@ export const Inventory = () => {
         setIsModalOpen(false);
         setNewProperty({
           id: '', name: '', type: '', brand: '', model: '', status: '',
-          price: 0, purchaseDate: '',
-          //  notes: '',
-          floorId: '', hallId: '', roomId: ''
+          price: 0, purchaseDate: '', notes: '', floorId: '', hallId: '', roomId: ''
         });
         setError('');
       }
@@ -312,7 +310,7 @@ export const Inventory = () => {
                 data.device.deviceStatus.toLowerCase() === 'under maintenance' ? 'not_working' : 'not_working',
         price: data.device.devicePrice || 0,
         purchaseDate: '',
-        // notes: '',
+        notes: '',
         floorId: '',
         hallId: '',
         roomId: '',
@@ -342,15 +340,11 @@ export const Inventory = () => {
   };
 
   const downloadCSV = () => {
-    const headers = ['ID', 'Name', 'Type', 'Brand', 'Model', 'Status', 'Price', 'Purchase Date', 
-      // 'Notes', 
-      'Floor', 'Wing', 'Room'];
+    const headers = ['ID', 'Name', 'Type', 'Brand', 'Model', 'Status', 'Price', 'Purchase Date', 'Notes', 'Floor', 'Wing', 'Room'];
     const csvContent = [
       headers.join(','),
       ...filteredProperties.map(property =>
-        `"${property.id}","${property.name}","${property.type}","${property.brand}","${property.model}","${property.status}","${property.price || 0}","${property.purchaseDate || ''}","
-        // ${property.notes || ''}","
-        ${property.floorName}","${property.hallName}","${property.roomName}"`
+        `"${property.id}","${property.name}","${property.type}","${property.brand}","${property.model}","${property.status}","${property.price || 0}","${property.purchaseDate || ''}","${property.notes || ''}","${property.floorName}","${property.hallName}","${property.roomName}"`
       )
     ].join('\n');
 
@@ -664,7 +658,7 @@ export const Inventory = () => {
                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
-                {/* <div>
+                <div>
                   <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
                     Notes
                   </h4>
@@ -674,7 +668,7 @@ export const Inventory = () => {
                     onChange={handleInputChange}
                     className="custom-border rounded p-3 w-full min-h-[80px] max-h-[120px] bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out resize-none"
                   />
-                </div> */}
+                </div>
               </div>
             </div>
           </div>
@@ -776,7 +770,7 @@ export const Inventory = () => {
             >
               Add Property
             </Button>
-            <Button
+          <Button
   onClick={downloadCSV}
   className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
 >
