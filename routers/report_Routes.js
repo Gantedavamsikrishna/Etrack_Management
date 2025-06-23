@@ -11,7 +11,7 @@ const {
 
 router.get("/get", getReports);
 router.post("/create", createReport);
-router.delete("/delete", deleteReport);
+router.delete("/delete/:id", deleteReport);
 router.put("/update/:id", updateReport);
 
 module.exports = router;
