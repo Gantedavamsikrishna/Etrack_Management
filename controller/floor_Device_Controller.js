@@ -190,6 +190,51 @@ const getDeviceById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+//  Create floor with dynamic wings and rooms (empty devices)
+const createDynamicFloor = async (req, res) => {
+  try {
+    const { floorName, wings } = req.body;
+
+    //  Validate input
+    if (!floorName || !Array.isArray(wings) || wings.length === 0) {
+      return res.status(400).json({
+        message: "floorName and wings (with rooms) are required.",
+      });
+    }
+
+    //  Check if floor already exists
+    const existingFloor = await Floor.findOne({ floorName });
+    if (existingFloor) {
+      return res.status(400).json({
+        message: "A floor with this name already exists.",
+      });
+    }
+
+    // ✅ Build the floor object
+    const floorData = {
+      floorName,
+      wings: wings.map((wing) => ({
+        wingName: wing.wingName,
+        rooms: (wing.rooms || []).map((roomName) => ({
+          roomName,
+          devices: [],
+        })),
+      })),
+    };
+
+    // ✅ Save to DB
+    const newFloor = new Floor(floorData);
+    const savedFloor = await newFloor.save();
+
+    res.status(201).json({
+      message: "Dynamic floor created successfully.",
+      floor: savedFloor,
+    });
+  } catch (error) {
+    console.error("Error creating dynamic floor:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
   createOrUpdateFloor,
@@ -197,4 +242,5 @@ module.exports = {
   filterByfloors,
   getDeviceById,
   createOrUpdateFloor,
+  createDynamicFloor,
 };
