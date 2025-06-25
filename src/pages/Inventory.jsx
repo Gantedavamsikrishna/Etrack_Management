@@ -4,11 +4,42 @@ import { createPortal } from 'react-dom';
 import { PropertyList } from '../components/property/PropertyList';
 import { PropertyType, PropertyStatus } from '../types';
 import Axios from 'axios';
-import { Plus, X, Monitor, Keyboard, Mouse, Fan, Lightbulb, Wifi, AirVent, ChevronDown } from 'lucide-react';
+import {
+  Monitor,
+  Keyboard,
+  Mouse,
+  Fan,
+  Lightbulb,
+  Wifi,
+  AirVent,
+  Printer,
+  Scan,
+  Speaker,
+  Mic,
+  Cpu,
+  Laptop,
+  BatteryCharging,
+  Network,
+  LayoutDashboard,
+  Presentation,
+  Camera,
+  Fingerprint,
+  Tv,
+  Plug,
+  Cable,
+  AlarmClock,
+  Gamepad,
+  HelpCircle,
+  ChevronDown,
+  Plus,
+  X,
+} from 'lucide-react';
 import { cn } from '../utils/cn';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const propertyIcons = {
   monitor: <Monitor className="h-8 w-8" />,
@@ -18,6 +49,31 @@ const propertyIcons = {
   light: <Lightbulb className="h-8 w-8" />,
   'wifi-router': <Wifi className="h-8 w-8" />,
   ac: <AirVent className="h-8 w-8" />,
+  projector: <Presentation className="h-8 w-8" />,
+  printer: <Printer className="h-8 w-8" />,
+  scanner: <Scan className="h-8 w-8" />,
+  speaker: <Speaker className="h-8 w-8" />,
+  microphone: <Mic className="h-8 w-8" />,
+  cpu: <Cpu className="h-8 w-8" />,
+  laptop: <Laptop className="h-8 w-8" />,
+  ups: <BatteryCharging className="h-8 w-8" />,
+  inverter: <BatteryCharging className="h-8 w-8" />,
+  'network-switch': <Network className="h-8 w-8" />,
+  whiteboard: <LayoutDashboard className="h-8 w-8" />,
+  smartboard: <LayoutDashboard className="h-8 w-8" />,
+  podium: <Presentation className="h-8 w-8" />,
+  cctv: <Camera className="h-8 w-8" />,
+  'biometric-scanner': <Fingerprint className="h-8 w-8" />,
+  tv: <Tv className="h-8 w-8" />,
+  'power-strip': <Plug className="h-8 w-8" />,
+  'extension-box': <Plug className="h-8 w-8" />,
+  'network-cable': <Cable className="h-8 w-8" />,
+  'hdmi-cable': <Cable className="h-8 w-8" />,
+  'vga-cable': <Cable className="h-8 w-8" />,
+  'remote-control': <Gamepad className="h-8 w-8" />,
+  'alarm-system': <AlarmClock className="h-8 w-8" />,
+  'access-point': <Wifi className="h-8 w-8" />,
+  default: <HelpCircle className="h-8 w-8" />,
 };
 
 export const Inventory = () => {
@@ -30,8 +86,9 @@ export const Inventory = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [floors, setFloors] = useState([]);
   const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [modalError, setModalError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [newProperty, setNewProperty] = useState({
     id: '',
@@ -40,12 +97,11 @@ export const Inventory = () => {
     brand: '',
     model: '',
     status: '',
-    price: 0, // Added devicePrice
+    price: 0,
     purchaseDate: '',
-    // notes: '',
     floorId: '',
     hallId: '',
-    roomId: ''
+    roomId: '',
   });
 
   const axiosInstance = Axios.create({
@@ -55,12 +111,12 @@ export const Inventory = () => {
   useEffect(() => {
     if (!user) {
       setError('Please log in to view inventory');
-      setLoading(false);
       navigate('/login');
       return;
     }
 
     const fetchData = async () => {
+      setLoading(true);
       try {
         const floorResponse = await axiosInstance.get('/getAllFloors');
         const floorsArray = Array.isArray(floorResponse.data) ? floorResponse.data : [];
@@ -68,7 +124,14 @@ export const Inventory = () => {
         await fetchFilteredDevices();
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError(err.response?.data?.message || 'Network error: Unable to reach the server');
+        const errorMessage = err.response?.data?.message || 'Network error: Unable to reach the server';
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: 'top-right',
+          autoClose: 3000,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          toastId: 'fetch-error',
+        });
       } finally {
         setLoading(false);
       }
@@ -77,19 +140,26 @@ export const Inventory = () => {
     fetchData();
   }, [user, navigate]);
 
+  const getDeviceType = (deviceName) => {
+    if (!deviceName) return 'default';
+    const name = deviceName.toLowerCase();
+    return Object.keys(propertyIcons).find((key) => name.includes(key.replace('-', ' '))) || 'default';
+  };
+
   const fetchFilteredDevices = async () => {
+    setLoading(true);
     try {
       const params = {};
       if (selectedFloor !== 'all') {
-        const floor = floors.find(f => f._id === selectedFloor);
+        const floor = floors.find((f) => f._id === selectedFloor);
         if (floor) params.floorName = floor.floorName;
       }
       if (selectedHall !== 'all') {
-        const hall = halls.find(h => h._id === selectedHall);
+        const hall = halls.find((h) => h._id === selectedHall);
         if (hall) params.wingName = hall.wingName;
       }
       if (selectedRoom !== 'all') {
-        const room = rooms.find(r => r._id === selectedRoom);
+        const room = rooms.find((r) => r._id === selectedRoom);
         if (room) params.roomName = room.roomName;
       }
       if (selectedDevice) {
@@ -97,69 +167,84 @@ export const Inventory = () => {
       }
 
       const deviceResponse = await axiosInstance.get('/filterByfloors', { params });
-      const mappedProperties = deviceResponse.data.flatMap(floor =>
-        floor.wings.flatMap(wing =>
-          wing.rooms.flatMap(room =>
-            (room.devices || []).map(device => ({
-              id: device.deviceBarcode,
-              name: device.deviceName,
-              type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
-                    device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
-                    device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
-                    device.deviceName.toLowerCase().includes('fan') ? 'fan' :
-                    device.deviceName.toLowerCase().includes('light') ? 'light' :
-                    device.deviceName.toLowerCase().includes('router') ? 'wifi-router' :
-                    device.deviceName.toLowerCase().includes('ac') ? 'ac' : 'monitor',
-              brand: device.deviceName.split(' ')[0] || 'Unknown',
+      const mappedProperties = deviceResponse.data.flatMap((floor) =>
+        floor.wings?.flatMap((wing) =>
+          wing.rooms?.flatMap((room) =>
+            (room.devices || []).map((device) => ({
+              id: device.deviceBarcode || '',
+              name: device.deviceName || 'Unknown',
+              type: getDeviceType(device.deviceName),
+              brand: device.deviceName?.split(' ')[0] || 'Unknown',
               model: device.deviceModel || 'Unknown',
-              status: device.deviceStatus.toLowerCase() === 'working' ? 'working' :
-                      device.deviceStatus.toLowerCase() === 'not working' ||
-                      device.deviceStatus.toLowerCase() === 'under maintenance' ? 'not_working' : 'not_working',
+              status:
+                device.deviceStatus?.toLowerCase() === 'working'
+                  ? 'working'
+                  : device.deviceStatus?.toLowerCase() === 'not working' ||
+                    device.deviceStatus?.toLowerCase() === 'under maintenance'
+                  ? 'not_working'
+                  : 'not_working',
               price: device.devicePrice || 0,
               purchaseDate: device.createdAt?.split('T')[0] || '',
-              // notes: device.notes || '',
-              floorId: floor._id,
-              hallId: wing._id,
-              roomId: room._id,
-              floorName: floor.floorName,
-              hallName: wing.wingName,
-              roomName: room.roomName,
-              deviceLocation: `${floor.floorName}/${wing.wingName}/${room.roomName}`
+              floorId: floor._id || '',
+              hallId: wing._id || '',
+              roomId: room._id || '',
+              floorName: floor.floorName || 'Unknown',
+              hallName: wing.wingName || 'Unknown',
+              roomName: room.roomName || 'Unknown',
+              deviceLocation:
+                (floor.floorName || 'Unknown') +
+                '/' +
+                (wing.wingName || 'Unknown') +
+                '/' +
+                (room.roomName || 'Unknown'),
             }))
-          )
-        )
+          ) || []
+        ) || []
       );
       setProperties(mappedProperties);
+      setError('');
     } catch (err) {
       console.error('Error fetching filtered devices:', err);
-      setError(err.response?.data?.message || 'Network error');
+      const errorMessage = err.response?.data?.message || 'Network error';
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'filter-error',
+      });
+      setProperties([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user) {
       fetchFilteredDevices();
     }
   }, [selectedFloor, selectedHall, selectedRoom, selectedDevice, floors, user]);
 
-  const halls = selectedFloor === 'all'
-    ? []
-    : floors.find(f => f._id === selectedFloor)?.wings || [];
-  const rooms = selectedHall === 'all'
-    ? []
-    : halls.find(h => h._id === selectedHall)?.rooms || [];
+  const halls =
+    selectedFloor === 'all'
+      ? []
+      : floors.find((f) => f._id === selectedFloor)?.wings || [];
+  const rooms =
+    selectedHall === 'all'
+      ? []
+      : halls.find((h) => h._id === selectedHall)?.rooms || [];
 
   const filteredProperties = properties.filter((property) => {
     if (selectedFloor !== 'all') {
-      const floor = floors.find(f => f._id === selectedFloor);
+      const floor = floors.find((f) => f._id === selectedFloor);
       if (!floor || property.floorName !== floor.floorName) return false;
     }
     if (selectedHall !== 'all') {
-      const hall = halls.find(h => h._id === selectedHall);
+      const hall = halls.find((h) => h._id === selectedHall);
       if (!hall || property.hallName !== hall.wingName) return false;
     }
     if (selectedRoom !== 'all') {
-      const room = rooms.find(r => r._id === selectedRoom);
+      const room = rooms.find((r) => r._id === selectedRoom);
       if (!room || property.roomName !== room.roomName) return false;
     }
     if (selectedDevice && property.type !== selectedDevice) return false;
@@ -168,20 +253,34 @@ export const Inventory = () => {
 
   const handlePropertySubmit = async (e) => {
     e.preventDefault();
+    setModalError('');
     if (!newProperty.id || !newProperty.name) {
-      setError('Barcode and Device Name are required');
+      setModalError('Barcode and Device Name are required');
+      toast.error('Barcode and Device Name are required', {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'validation-error',
+      });
       return;
     }
 
+    setLoading(true);
     try {
-      const floor = floors.find(f => f._id === newProperty.floorId);
+      const floor = floors.find((f) => f._id === newProperty.floorId);
       const selectedHalls = floor?.wings || [];
-      const hall = selectedHalls.find(h => h._id === newProperty.hallId);
+      const hall = selectedHalls.find((h) => h._id === newProperty.hallId);
       const selectedRooms = hall?.rooms || [];
-      const room = selectedRooms.find(r => r._id === newProperty.roomId);
+      const room = selectedRooms.find((r) => r._id === newProperty.roomId);
 
       if (!floor || !hall || !room) {
-        setError('Invalid floor, wing, or room selection');
+        setModalError('Invalid floor, wing, or room selection');
+        toast.error('Invalid floor, wing, or room selection', {
+          position: 'top-right',
+          autoClose: 3000,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          toastId: 'selection-error',
+        });
         return;
       }
 
@@ -189,13 +288,15 @@ export const Inventory = () => {
         floorName: floor.floorName,
         wingName: hall.wingName,
         roomName: room.roomName,
-        devices: [{
-          deviceBarcode: newProperty.id,
-          deviceName: newProperty.name,
-          devicePrice: newProperty.price || 0,
-          deviceModel: newProperty.model || 'Unknown',
-          deviceStatus: newProperty.status || 'working'
-        }]
+        devices: [
+          {
+            deviceBarcode: newProperty.id,
+            deviceName: newProperty.name,
+            devicePrice: newProperty.price || 0,
+            deviceModel: newProperty.model || 'Unknown',
+            deviceStatus: newProperty.status || 'working',
+          },
+        ],
       };
       console.log('Adding property payload:', payload);
 
@@ -205,45 +306,73 @@ export const Inventory = () => {
         const newProp = {
           id: newProperty.id,
           name: newProperty.name,
-          type: newProperty.type || 'monitor',
+          type: newProperty.type || 'default',
           brand: newProperty.brand || 'Unknown',
           model: newProperty.model || 'Unknown',
           status: newProperty.status || 'working',
           price: newProperty.price || 0,
           purchaseDate: newProperty.purchaseDate || '',
-          // notes: newProperty.notes || '',
           floorId: floor._id,
           hallId: hall._id,
           roomId: room._id,
           floorName: floor.floorName,
           hallName: hall.wingName,
           roomName: room.roomName,
-          deviceLocation: `${floor.floorName}/${hall.wingName}/${room.roomName}`
+          deviceLocation: floor.floorName + '/' + hall.wingName + '/' + room.roomName,
         };
         setProperties([...properties, newProp]);
         setIsModalOpen(false);
         setNewProperty({
-          id: '', name: '', type: '', brand: '', model: '', status: '',
-          price: 0, purchaseDate: '', 
-          // notes: '', 
-          floorId: '', hallId: '', roomId: ''
+          id: '',
+          name: '',
+          type: '',
+          brand: '',
+          model: '',
+          status: '',
+          price: 0,
+          purchaseDate: '',
+          floorId: '',
+          hallId: '',
+          roomId: '',
         });
-        setError('');
+        setModalError('');
+        toast.success('Property added successfully!', {
+          position: 'top-right',
+          autoClose: 4000,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          toastId: 'add-success',
+        });
       }
     } catch (err) {
       console.error('Error adding device:', err);
-      setError(err.response?.data?.message || 'Network error');
+      const errorMessage = err.response?.data?.message || 'Network error';
+      setModalError(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'add-error',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEditProperty = async (updatedProperty) => {
+    setLoading(true);
     try {
-      const floor = floors.find(f => f._id === updatedProperty.floorId);
-      const hall = floor?.wings.find(h => h._id === updatedProperty.hallId);
-      const room = hall?.rooms.find(r => r._id === updatedProperty.roomId);
+      const floor = floors.find((f) => f._id === updatedProperty.floorId);
+      const hall = floor?.wings?.find((h) => h._id === updatedProperty.hallId);
+      const room = hall?.rooms?.find((r) => r._id === updatedProperty.roomId);
 
       if (!floor || !hall || !room) {
         setError('Invalid floor, wing, or room selection');
+        toast.error('Invalid floor, wing, or room selection', {
+          position: 'top-right',
+          autoClose: 3000,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          toastId: 'edit-selection-error',
+        });
         return;
       }
 
@@ -252,21 +381,38 @@ export const Inventory = () => {
         newFloorName: floor.floorName,
         newWingName: hall.wingName,
         newRoomName: room.roomName,
-        newStatus: updatedProperty.status === 'working' ? 'working' : 'not working'
+        newStatus: updatedProperty.status === 'working' ? 'working' : 'not working',
       };
       console.log('Updating property payload:', payload);
 
       const response = await axiosInstance.put('/update-location-status', payload);
 
       if (response.status === 200) {
-        setProperties(properties.map(prop =>
-          prop.id === updatedProperty.id ? { ...prop, ...updatedProperty } : prop
-        ));
+        setProperties(
+          properties.map((prop) =>
+            prop.id === updatedProperty.id ? { ...prop, ...updatedProperty } : prop
+          )
+        );
         setError('');
+        toast.success('Property updated successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+          theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+          toastId: 'edit-success',
+        });
       }
     } catch (err) {
       console.error('Error updating device:', err);
-      setError(err.response?.data?.message || 'Network error');
+      const errorMessage = err.response?.data?.message || 'Network error';
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'edit-error',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -278,6 +424,7 @@ export const Inventory = () => {
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       setIsModalOpen(false);
+      setModalError('');
     }
   };
 
@@ -291,43 +438,64 @@ export const Inventory = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const response = await axiosInstance.get(`/device/${term}`);
       const { data } = response.data;
+      if (!data.device) {
+        throw new Error('Device data not found');
+      }
 
       const mappedProperty = {
-        id: data.device.deviceBarcode,
-        name: data.device.deviceName,
-        type: data.device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
-              data.device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
-              data.device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
-              data.device.deviceName.toLowerCase().includes('fan') ? 'fan' :
-              data.device.deviceName.toLowerCase().includes('light') ? 'light' :
-              data.device.deviceName.toLowerCase().includes('router') ? 'wifi-router' :
-              data.device.deviceName.toLowerCase().includes('ac') ? 'ac' : 'monitor',
-        brand: data.device.deviceName.split(' ')[0] || 'Unknown',
+        id: data.device.deviceBarcode || '',
+        name: data.device.deviceName || 'Unknown',
+        type: getDeviceType(data.device.deviceName),
+        brand: data.device.deviceName?.split(' ')[0] || 'Unknown',
         model: data.device.deviceModel || 'Unknown',
-        status: data.device.deviceStatus.toLowerCase() === 'working' ? 'working' :
-                data.device.deviceStatus.toLowerCase() === 'not working' ||
-                data.device.deviceStatus.toLowerCase() === 'under maintenance' ? 'not_working' : 'not_working',
+        status:
+          data.device.deviceStatus?.toLowerCase() === 'working'
+            ? 'working'
+            : data.device.deviceStatus?.toLowerCase() === 'not working' ||
+              data.device.deviceStatus?.toLowerCase() === 'under maintenance'
+            ? 'not_working'
+            : 'not_working',
         price: data.device.devicePrice || 0,
         purchaseDate: '',
-        // notes: '',
         floorId: '',
         hallId: '',
         roomId: '',
         floorName: data.floorName || 'Unknown',
         hallName: data.wingName || 'Unknown',
         roomName: data.roomName || 'Unknown',
-        deviceLocation: `${data.floorName || 'Unknown'}/${data.wingName || 'Unknown'}/${data.roomName || 'Unknown'}`
+        deviceLocation:
+          (data.floorName || 'Unknown') +
+          '/' +
+          (data.wingName || 'Unknown') +
+          '/' +
+          (data.roomName || 'Unknown'),
       };
 
       setProperties([mappedProperty]);
       setError('');
+      toast.success('Device found!', {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'search-success',
+      });
     } catch (err) {
       console.error('Error searching device:', err);
-      setError(err.response?.data?.message || 'Device not found');
+      const errorMessage = err.response?.data?.message || 'Device not found';
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'search-error',
+      });
       setProperties([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -342,16 +510,24 @@ export const Inventory = () => {
   };
 
   const downloadCSV = () => {
-    const headers = ['ID', 'Name', 'Type', 'Brand', 'Model', 'Status', 'Price', 'Purchase Date', 
-      // 'Notes',
-       'Floor', 'Wing', 'Room'];
+    const headers = [
+      'ID',
+      'Name',
+      'Type',
+      'Brand',
+      'Model',
+      'Status',
+      'Price',
+      'Purchase Date',
+      'Floor',
+      'Wing',
+      'Room',
+    ];
     const csvContent = [
       headers.join(','),
-      ...filteredProperties.map(property =>
-        `"${property.id}","${property.name}","${property.type}","${property.brand}","${property.model}","${property.status}","${property.price || 0}","${property.purchaseDate || ''}","
-        // ${property.notes || ''}","
-        ${property.floorName}","${property.hallName}","${property.roomName}"`
-      )
+      ...filteredProperties.map((property) =>
+        `"${property.id}","${property.name}","${property.type}","${property.brand}","${property.model}","${property.status}","${property.price || 0}","${property.purchaseDate || ''}","${property.floorName}","${property.hallName}","${property.roomName}"`
+      ),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -361,6 +537,12 @@ export const Inventory = () => {
     a.download = 'inventory_export.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+    toast.success('CSV downloaded successfully!', {
+      position: 'top-right',
+      autoClose: 3000,
+      theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+      toastId: 'csv-success',
+    });
   };
 
   const modalContent = (
@@ -382,7 +564,7 @@ export const Inventory = () => {
             background-color: #D1D5DB;
           }
           .custom-border {
-            border: 1px solid rgba(209, 213, 219, 0.4) !important;
+            border: 1px solid rgba(209, 213, 219, 0.4);
           }
           @media (prefers-color-scheme: dark) {
             select.custom-select option {
@@ -393,7 +575,7 @@ export const Inventory = () => {
               background-color: #374151;
             }
             .custom-border {
-              border: 1px solid rgba(255, 255, 255, 0.2) !important;
+              border: 1px solid rgba(255, 255, 255, 0.2);
             }
           }
         `}
@@ -419,7 +601,10 @@ export const Inventory = () => {
           <div className="flex justify-between items-center border-b border-gray-300/40 dark:border-white/20 pb-4">
             <h2 className="text-xl font-bold">Add New Property</h2>
             <button
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setModalError('');
+              }}
               className="text-gray-600 dark:text-white/80 hover:text-gray-800 dark:hover:text-white hover:bg-gray-300/20 dark:hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
               aria-label="Close"
             >
@@ -428,6 +613,11 @@ export const Inventory = () => {
           </div>
 
           <div className="modal-content overflow-y-auto flex-1 pt-4 pb-4">
+            {modalError && (
+              <div className="mb-4 p-3 bg-red-100/20 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md text-sm">
+                {modalError}
+              </div>
+            )}
             <div className="flex items-center justify-start mb-6">
               <div
                 className={cn(
@@ -439,11 +629,16 @@ export const Inventory = () => {
                     : 'bg-gray-100/30 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400'
                 )}
               >
-                {newProperty.type ? propertyIcons[newProperty.type] : <Plus className="h-8 w-8" />}
+                {newProperty.type ? propertyIcons[newProperty.type] || propertyIcons.default : <Plus className="h-8 w-8" />}
               </div>
               <div>
                 <h3 className="text-lg font-medium">
-                  {newProperty.type ? newProperty.type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'New Property'}
+                  {newProperty.type
+                    ? newProperty.type
+                        .split('-')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ')
+                    : 'New Property'}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-white/80">
                   {newProperty.brand && newProperty.model
@@ -525,7 +720,10 @@ export const Inventory = () => {
                       <option value="">Select Type</option>
                       {Object.values(PropertyType).map((type) => (
                         <option key={type} value={type}>
-                          {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          {type
+                            .split('-')
+                            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ')}
                         </option>
                       ))}
                     </select>
@@ -594,7 +792,12 @@ export const Inventory = () => {
                       name="floorId"
                       value={newProperty.floorId}
                       onChange={(e) =>
-                        setNewProperty({ ...newProperty, floorId: e.target.value, hallId: '', roomId: '' })
+                        setNewProperty({
+                          ...newProperty,
+                          floorId: e.target.value,
+                          hallId: '',
+                          roomId: '',
+                        })
                       }
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
                     >
@@ -617,7 +820,11 @@ export const Inventory = () => {
                       name="hallId"
                       value={newProperty.hallId}
                       onChange={(e) =>
-                        setNewProperty({ ...newProperty, hallId: e.target.value, roomId: '' })
+                        setNewProperty({
+                          ...newProperty,
+                          hallId: e.target.value,
+                          roomId: '',
+                        })
                       }
                       className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
                       disabled={!newProperty.floorId}
@@ -664,17 +871,6 @@ export const Inventory = () => {
                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
                   </div>
                 </div>
-                {/* <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
-                    Notes
-                  </h4>
-                  <textarea
-                    name="notes"
-                    value={newProperty.notes}
-                    onChange={handleInputChange}
-                    className="custom-border rounded p-3 w-full min-h-[80px] max-h-[120px] bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out resize-none"
-                  />
-                </div> */}
               </div>
             </div>
           </div>
@@ -682,7 +878,10 @@ export const Inventory = () => {
           <div className="border-t border-gray-300/40 dark:border-white/20 flex justify-end pt-4 gap-2">
             <Button
               variant="outline"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setModalError('');
+              }}
               className="px-4 py-2 text-sm bg-gray-100/20 dark:bg-white/10 hover:bg-gray-200/30 dark:hover:bg-white/20 text-gray-900 dark:text-white border-gray-300/40 dark:border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
             >
               Cancel
@@ -709,17 +908,20 @@ export const Inventory = () => {
         }
         .animate-border-form::before {
           content: '';
-          @apply absolute -top-[1px] -left-[1px] -right-[1px] -bottom-[1px] border-2 rounded-md;
-          border-color: #2ea44f;
+          position: absolute;
+          top: -1px;
+          left: -1px;
+          right: -1px;
+          bottom: -1px;
+          border: 2px solid #2ea44f;
+          border-radius: 0.375rem;
           animation: border-form 3s linear infinite;
         }
         @keyframes border-form {
           0% { clip-path: polygon(0 0, 0 0, 0 0, 0 0); }
           25% { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); }
           50% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-          75% { clip-path: polygon(0 0, 100%
-
- 0, 100% 100%, 0 100%); }
+          75% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
           100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
         }
         @media (prefers-color-scheme: dark) {
@@ -731,12 +933,25 @@ export const Inventory = () => {
     </style>
   );
 
-  if (error) return <div className="text-red-500">{error}</div>;
-
   return (
     <>
       {inputStyles}
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={true}
+        closeOnClick={true}
+        pauseOnHover
+        draggable
+        theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+        limit={3}
+      />
       <div className="space-y-4 p-6">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100/20 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md text-sm">
+            {error}
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex flex-col gap-2 w-full sm:w-auto">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory</h1>
@@ -776,12 +991,12 @@ export const Inventory = () => {
             >
               Add Property
             </Button>
-          <Button
-  onClick={downloadCSV}
-  className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
->
-  Download CSV
-</Button>
+            <Button
+              onClick={downloadCSV}
+              className="px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transform hover:scale-105 transition-all duration-300 ease-in-out"
+            >
+              Download CSV
+            </Button>
           </div>
         </div>
 
@@ -806,7 +1021,7 @@ export const Inventory = () => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Floors</option>
-                {floors.map(floor => (
+                {floors.map((floor) => (
                   <option key={floor._id} value={floor._id}>
                     {floor.floorName || 'Unnamed Floor'}
                   </option>
@@ -832,7 +1047,7 @@ export const Inventory = () => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 <option value="all">All Wings</option>
-                {halls.map(wing => (
+                {halls.map((wing) => (
                   <option key={wing._id} value={wing._id}>
                     {wing.wingName || 'Unnamed Wing'}
                   </option>
@@ -854,12 +1069,12 @@ export const Inventory = () => {
                   setSelectedRoom(e.target.value);
                 }}
                 disabled={selectedHall === 'all'}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 <option value="all">All Rooms</option>
-                {rooms.map(room => (
+                {rooms.map((room) => (
                   <option key={room._id} value={room._id}>
-                    {room.roomName || 'Unnamed Room'}
+                    {room.roomName || 'Unknown Room'}
                   </option>
                 ))}
               </select>
@@ -868,7 +1083,7 @@ export const Inventory = () => {
             <div>
               <label
                 htmlFor="device-filter"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-white/80 mb-1"
               >
                 Device Type
               </label>
@@ -876,12 +1091,15 @@ export const Inventory = () => {
                 id="device-filter"
                 value={selectedDevice}
                 onChange={(e) => setSelectedDevice(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Device Types</option>
                 {Object.values(PropertyType).map((type) => (
                   <option key={type} value={type}>
-                    {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    {type
+                      .split('-')
+                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ')}
                   </option>
                 ))}
               </select>
@@ -893,9 +1111,13 @@ export const Inventory = () => {
 
         <PropertyList
           properties={filteredProperties}
-          title={`Inventory${selectedFloor !== 'all' ? ` - ${floors.find(f => f._id === selectedFloor)?.floorName}` : ''}${selectedHall !== 'all' ? ` ${halls.find(h => h._id === selectedHall)?.wingName}` : ''}${selectedRoom !== 'all' ? ` ${rooms.find(r => r._id === selectedRoom)?.roomName}` : ''}${selectedDevice !== '' ? ` ${selectedDevice.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}` : ''}`}
+          title={`Inventory${selectedFloor !== 'all' ? ` - ${floors.find((f) => f._id === selectedFloor)?.floorName || ''}` : ''}${selectedHall !== 'all' ? ` ${halls.find((h) => h._id === selectedHall)?.wingName || ''}` : ''}${selectedRoom !== 'all' ? ` ${rooms.find((r) => r._id === selectedRoom)?.roomName || ''}` : ''}${selectedDevice ? ` ${selectedDevice
+            .split('-')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')}` : ''}`}
           onEdit={handleEditProperty}
           enableEdit={true}
+          loading={loading}
         />
       </div>
     </>

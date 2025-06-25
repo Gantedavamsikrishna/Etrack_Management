@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Building2, Gauge, LampDesk, Layers, Map } from 'lucide-react';
+import { Building2, Gauge, LampDesk, Layers, Map, FileText } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
@@ -77,20 +78,20 @@ export const Sidebar = ({ isOpen, onClose }) => {
           }
         });
         const data = await response.json();
-        console.log('Sidebar API Response:', data); // Debug: Log raw API response
+        console.log('Sidebar API Response:', data);
         if (response.ok) {
           const mappedFloors = data.map(floor => ({
             id: parseInt(floor.floorName.match(/\d+/)[0]),
             name: floor.floorName,
             halls: (floor.wings || []).map((wing, wingIndex) => ({
-              id: wingIndex.toString(), // Use index as ID
+              id: wingIndex.toString(),
               name: wing.wingName,
               rooms: (wing.rooms || []).map((room, roomIndex) => ({
-                id: roomIndex.toString(), // Use index as ID
+                id: roomIndex.toString(),
                 name: room.roomName,
                 properties: (room.devices || []).flatMap(device => 
                   Array(device.count || 1).fill().map(() => ({
-                    id: `${device.deviceName}-${Math.random().toString(36).substr(2, 9)}`,
+                    id: `${device.deviceName}-${Math.random().toString(36).substring(2, 11)}`,
                     type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
                           device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
                           device.deviceName.toLowerCase().includes('fan') ? 'fan' :
@@ -106,7 +107,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
               }))
             }))
           }));
-          console.log('Sidebar Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          console.log('Sidebar Mapped Floors:', mappedFloors);
           setFloors(mappedFloors);
         } else {
           console.error('Failed to fetch floors:', data.message);
@@ -150,6 +151,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
             <NavItem to="/" icon={<Gauge className="h-5 w-5" />} label="Dashboard" end />
             <NavItem to="/inventory" icon={<LampDesk className="h-5 w-5" />} label="Inventory" />
             <NavItem to="/map" icon={<Map className="h-5 w-5" />} label="Building Map" />
+            <NavItem to="/reports" icon={<FileText className="h-5 w-5" />} label="Reports" />
 
             <div className="pt-4 pb-2">
               <div className="flex items-center px-4">

@@ -1,8 +1,11 @@
+
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ReportsProvider } from './context/ReportsContext';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Floor } from './pages/Floor';
@@ -10,11 +13,11 @@ import { Hall } from './pages/Hall';
 import { Room } from './pages/Room';
 import { Inventory } from './pages/Inventory';
 import { BuildingMap } from './pages/BuildingMap';
-import  AdminDetails  from './pages/AdminDetails';
+import AdminDetails from './pages/AdminDetails';
+import { Reports } from './pages/Reports';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Protected route component
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
 
@@ -63,6 +66,14 @@ const AppRoutes = () => {
           </Layout>
         </ProtectedRoute>
       } />
+
+      <Route path="/reports" element={
+        <ProtectedRoute>
+          <Layout>
+            <Reports />
+          </Layout>
+        </ProtectedRoute>
+      } />
       
       <Route path="/floors/:floorId" element={
         <ProtectedRoute>
@@ -103,9 +114,8 @@ const AppRoutes = () => {
 
 function App() {
   return (
-
     <BrowserRouter>
-    <ToastContainer
+      <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
@@ -120,7 +130,9 @@ function App() {
       />
       <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
+          <ReportsProvider>
+            <AppRoutes />
+          </ReportsProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

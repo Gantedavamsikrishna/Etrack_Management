@@ -15,7 +15,7 @@ const propertyIcons = {
 };
 
 export const PropertyCard = ({ property, onClick }) => {
-  const { type, status, brand } = property;
+  const { type, status, brand , id} = property;
   
   const formatType = (type) => {
     return type
@@ -40,10 +40,10 @@ export const PropertyCard = ({ property, onClick }) => {
           
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              {formatType(type)}
+              {brand}
             </p>
             <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
-              {brand}
+              {id}
             </p>
           </div>
           
