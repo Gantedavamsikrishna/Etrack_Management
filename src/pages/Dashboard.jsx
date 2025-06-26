@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Building2, 
-  Layers, 
-  DoorOpen, 
+import {
+  Building2,
+  Layers,
+  DoorOpen,
   Activity,
   LampDesk,
   AlertCircle
@@ -13,37 +13,41 @@ import { StatusChart } from '../components/charts/StatusChart';
 import { PropertyTypeChart } from '../components/charts/PropertyTypeChart.jsx';
 import { PropertyType } from '../types';
 import { useAuth } from '../context/AuthContext';
+import DashboardSkeleton from '../utils/DashboardSkeleton.jsx';
 
 export const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [floors, setFloors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       console.log('No user, redirecting to login');
       navigate('/login');
+      setIsLoading(false);
       return;
     }
 
     const fetchFloors = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
           headers: {
             'Authorization': `Bearer ${user.token}`
           }
         });
         const data = await response.json();
-        console.log('Dashboard API Response:', data); // Debug: Log raw API response
+        console.log('Dashboard API Response:', data);
         if (response.ok) {
           const mappedFloors = data.map(floor => ({
             id: parseInt(floor.floorName.match(/\d+/)[0]),
             name: floor.floorName,
             halls: (floor.wings || []).map((wing, wingIndex) => ({
-              id: wingIndex.toString(), // Use index as ID
+              id: wingIndex.toString(),
               name: wing.wingName,
               rooms: (wing.rooms || []).map((room, roomIndex) => ({
-                id: roomIndex.toString(), // Use index as ID
+                id: roomIndex.toString(),
                 name: room.roomName,
                 properties: (room.devices || []).flatMap(device => 
                   Array(device.count || 1).fill().map(() => ({
@@ -63,18 +67,24 @@ export const Dashboard = () => {
               }))
             }))
           }));
-          console.log('Dashboard Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          console.log('Dashboard Mapped Floors:', mappedFloors);
           setFloors(mappedFloors);
         } else {
           console.error('Failed to fetch floors:', data.message);
         }
       } catch (error) {
         console.error('Error fetching floors:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchFloors();
   }, [user, navigate]);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   const totalFloors = floors.length;
   const totalHalls = floors.reduce((acc, floor) => acc + floor.halls.length, 0);
@@ -115,8 +125,6 @@ export const Dashboard = () => {
     };
   }).sort((a, b) => b.percentage - b.percentage);
   
-  const mostProblematicType = typesWithIssues[0];
-  
   const formatType = (type) => {
     return type
       .split('-')
@@ -133,8 +141,8 @@ export const Dashboard = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="col-span-2">
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
           <CardContent className="p-4 flex items-center">
             <div className="mr-4 p-3 rounded-lg bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400">
               <LampDesk className="h-6 w-6" />
@@ -154,30 +162,6 @@ export const Dashboard = () => {
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Floors</p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">{totalFloors}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4 flex items-center">
-            <div className="mr-4 p-3 rounded-lg bg-accent-100 dark:bg-accent-900 text-accent-600 dark:text-accent-400">
-              <Layers className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Halls</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{totalHalls}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4 flex items-center">
-            <div className="mr-4 p-3 rounded-lg bg-success-100 dark:bg-success-900 text-success-600 dark:text-success-400">
-              <DoorOpen className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Rooms</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{totalRooms}</p>
             </div>
           </CardContent>
         </Card>

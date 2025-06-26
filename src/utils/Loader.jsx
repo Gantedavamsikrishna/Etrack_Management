@@ -2,28 +2,45 @@ import React from "react";
 
 function WifiLoader({ className = "" }) {
   return (
-    <div className={`flex flex-col items-center ${className}`}>
-      <div className="relative w-20 h-20 flex items-center justify-center">
-        <div
-          className="absolute rounded-full border-t-2 border-blue-400 w-16 h-16 animate-ping"
-          style={{ animationDelay: "0s" }}
-        ></div>
-        <div
-          className="absolute rounded-full border-t-2 border-blue-400 w-12 h-12 animate-ping"
-          style={{ animationDelay: "0.3s" }}
-        ></div>
-        <div
-          className="absolute rounded-full border-t-2 border-blue-400 w-8 h-8 animate-ping"
-          style={{ animationDelay: "0.6s" }}
-        ></div>
-        <div className="w-2 h-3 bg-blue-400 rounded-full z-10"></div>
+    <>
+      <style>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+        .animate-float {
+          animation: float 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}</style>
+      <div className={`flex flex-col items-center ${className}`}>
+        <div className="relative w-16 h-12 flex items-end justify-center space-x-0.5">
+          {[0, 1, 2, 3, 4].map((index) => (
+            <div
+              key={`block-${index}`}
+              className={
+                `w-2 bg-gradient-to-t from-green-500 to-blue-400 rounded-t animate-float ` +
+                (index === 0 || index === 4 ? 'h-4 ' : '') +
+                (index === 1 || index === 3 ? 'h-6 ' : '') +
+                (index === 2 ? 'h-8 ' : '')
+              }
+              style={{
+                animationDelay: `${index * 0.2}s`,
+                willChange: 'transform',
+              }}
+            />
+          ))}
+        </div>
+        <div className="mt-2 flex flex-col items-center">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            Loading floor data...
+          </p>
+        </div>
       </div>
-      <div className="mt-4 flex flex-col items-center">
-        <p className="text-gray-500 dark:text-gray-400 text-base mt-2">
-          Please wait while we load the admin details.
-        </p>
-      </div>
-    </div>
+    </>
   );
 }
 
