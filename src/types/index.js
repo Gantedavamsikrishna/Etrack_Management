@@ -1,5 +1,3 @@
-// Property types as constants
-// Property types as constants
 export const PropertyType = {
   Monitor: 'monitor',
   Keyboard: 'keyboard',

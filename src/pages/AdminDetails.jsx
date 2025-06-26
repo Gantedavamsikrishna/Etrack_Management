@@ -30,6 +30,7 @@ const AdminDetails = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
 
+  // Fetch admins
   useEffect(() => {
     fetchAdmins();
   }, []);
@@ -91,7 +92,7 @@ const AdminDetails = () => {
     }
 
     try {
-      await axios.post(`${API_BASE}/admin/add`, data, {
+      await axios.post(`${API_BASE}/admin/create`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success("Admin added successfully!", {
@@ -130,14 +131,6 @@ const AdminDetails = () => {
 
   return (
     <>
-      <style>
-        {`
-          .modal-overlay {
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-          }
-        `}
-      </style>
       <ToastContainer
         position="top-right"
         autoClose={4000}
@@ -149,77 +142,80 @@ const AdminDetails = () => {
         limit={3}
         style={{ zIndex: 10000, top: '20px', right: '20px' }}
       />
-      <div className="px-4 py-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        {loading ? (
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-            <div className="h-[520px] w-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <WifiLoader className="scale-[2]" />
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 relative overflow-hidden login-container">
+        {/* Main Content */}
+        <div className="relative z-10 px-4 py-6">
+          {loading ? (
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600">
+              <div className="h-[520px] w-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <WifiLoader className="scale-[2]" />
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-2xl font-bold text-black dark:text-white">
-                Admin Details
-              </h1>
-              <button
-                onClick={() => {
-                  setShowForm(true);
-                  setSelectedAdmin(null);
-                  setShowPassword(false);
-                }}
-                className="cursor-pointer rounded-xl bg-white/30 dark:bg-white/10 border border-white/50 dark:border-white/20 px-4 py-2 text-black dark:text-white backdrop-blur-lg shadow-md hover:bg-white/40 dark:hover:bg-white/20 transition"
-              >
-                + Add Admin User
-              </button>
-            </div>
-            {/* Admin Cards */}
-            <div className="grid gap-8 md:grid-cols-2 mt-4">
-              {admins.length > 0 ? (
-                admins.map((admin) => (
-                  <Card
-                    key={admin._id}
-                    onClick={() => setSelectedAdmin(admin)}
-                    className="flex items-center gap-4 p-6 m-2 cursor-pointer bg-white/30 dark:bg-white/10 backdrop-blur-lg border border-gray-300/70 dark:border-white/20 rounded-xl text-black dark:text-white shadow-lg hover:shadow-xl"
-                  >
-                    <img
-                      src={`${API_BASE}/adminImage/${admin.adminImage}`}
-                      onError={(e) => (e.target.src = defaultAvatar)}
-                      alt={admin.adminName}
-                      className="w-14 h-14 rounded-full object-cover border border-gray-300/70 dark:border-white/40"
-                    />
-                    <div>
-                      <h3 className="text-lg font-semibold">{admin.adminName}</h3>
-                      <p className="text-sm text-gray-700 dark:text-white/70">
-                        ID: {admin.adminId}
-                      </p>
-                    </div>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-gray-700 dark:text-white/70">
-                  No admins found.
-                </p>
-              )}
-            </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Admin Details
+                </h1>
+                <button
+                  onClick={() => {
+                    setShowForm(true);
+                    setSelectedAdmin(null);
+                    setShowPassword(false);
+                  }}
+                  className="cursor-pointer rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-white shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                >
+                  + Add Admin User
+                </button>
+              </div>
+              {/* Admin Cards */}
+              <div className="grid gap-8 md:grid-cols-2 mt-4">
+                {admins.length > 0 ? (
+                  admins.map((admin) => (
+                    <Card
+                      key={admin._id}
+                      onClick={() => setSelectedAdmin(admin)}
+                      className="flex items-center gap-4 p-6 m-2 cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    >
+                      <img
+                        src={`${API_BASE}/adminImage/${admin.adminImage}`}
+                        onError={(e) => (e.target.src = defaultAvatar)}
+                        alt={admin.adminName}
+                        className="w-14 h-14 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                      />
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{admin.adminName}</h3>
+                        <p className="text-sm text-gray-800 dark:text-gray-300">
+                          ID: {admin.adminId}
+                        </p>
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-gray-800 dark:text-gray-300">
+                    No admins found.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Add Admin Modal */}
         {showForm && (
           <div
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-md modal-overlay flex items-center justify-center z-[1000]"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]"
             onClick={() => {
               setShowForm(false);
               handleClear();
             }}
           >
             <div
-              className="bg-white/30 dark:bg-gray-800/20 backdrop-blur-lg rounded-3xl border border-white/50 dark:border-white/20 p-6 w-full max-w-md shadow-md"
+              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 p-6 w-full max-w-md shadow-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-black dark:text-white">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Add Admin User
                 </h2>
                 <button
@@ -233,9 +229,9 @@ const AdminDetails = () => {
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <form onSubmit={handleAddAdmin} className="space-y-4">
+              <form onSubmit={handleAddAdmin} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Admin ID
                   </label>
                   <input
@@ -243,12 +239,12 @@ const AdminDetails = () => {
                     name="adminId"
                     value={formData.adminId}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border border-white/50 dark:border-white/20 bg-white/10 dark:bg-gray-800/10 text-black dark:text-white p-2"
+                    className="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-2.5"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Name
                   </label>
                   <input
@@ -256,12 +252,12 @@ const AdminDetails = () => {
                     name="adminName"
                     value={formData.adminName}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border border-white/50 dark:border-white/20 bg-white/10 dark:bg-gray-800/10 text-black dark:text-white p-2"
+                    className="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-2.5"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Email
                   </label>
                   <input
@@ -269,12 +265,12 @@ const AdminDetails = () => {
                     name="adminEmail"
                     value={formData.adminEmail}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border border-white/50 dark:border-white/20 bg-white/10 dark:bg-gray-800/10 text-black dark:text-white p-2"
+                    className="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-2.5"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Password
                   </label>
                   <div className="relative">
@@ -283,7 +279,7 @@ const AdminDetails = () => {
                       name="adminPassword"
                       value={formData.adminPassword}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border border-white/50 dark:border-white/20 bg-white/10 dark:bg-gray-800/10 text-black dark:text-white p-2 pr-10"
+                      className="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-2.5 pr-10"
                       required
                     />
                     <button
@@ -300,7 +296,7 @@ const AdminDetails = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Profile Image
                   </label>
                   <div className="mt-1 flex items-center">
@@ -314,7 +310,7 @@ const AdminDetails = () => {
                     />
                     <label
                       htmlFor="adminImage"
-                      className="cursor-pointer inline-flex items-center px-4 py-2 bg-white/30 dark:bg-gray-800/30 border border-white/50 dark:border-white/20 rounded-md text-sm text-black dark:text-white hover:bg-white/40 dark:hover:bg-gray-800/40"
+                      className="cursor-pointer inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
                     >
                       <Upload className="h-5 w-5 mr-2" />
                       Choose Image
@@ -326,11 +322,11 @@ const AdminDetails = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="px-4 py-2 bg-white/30 dark:bg-gray-800/30 border border-white/50 dark:border-white/20 text-black dark:text-white rounded-md hover:bg-white/40 dark:hover:bg-gray-800/40"
+                    className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
                   >
                     Clear
                   </button>
@@ -349,15 +345,15 @@ const AdminDetails = () => {
         {/* Admin Details Modal */}
         {selectedAdmin && (
           <div
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-md modal-overlay flex items-center justify-center z-[1000]"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]"
             onClick={() => setSelectedAdmin(null)}
           >
             <div
-              className="bg-white/30 dark:bg-gray-800/20 backdrop-blur-lg rounded-3xl border border-white/50 dark:border-white/20 p-6 w-full max-w-md shadow-md"
+              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 p-6 w-full max-w-md shadow-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-black dark:text-white">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Admin Details
                 </h2>
                 <button
@@ -368,38 +364,38 @@ const AdminDetails = () => {
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-center">
                   <img
                     src={`${API_BASE}/adminImage/${selectedAdmin.adminImage}`}
                     onError={(e) => (e.target.src = defaultAvatar)}
                     alt={selectedAdmin.adminName}
-                    className="w-24 h-24 rounded-full object-cover border border-white/50 dark:border-white/40"
+                    className="w-24 h-24 rounded-full object-cover border border-gray-200 dark:border-gray-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Admin ID
                   </label>
-                  <p className="mt-1 text-black dark:text-white">{selectedAdmin.adminId}</p>
+                  <p className="mt-1 text-gray-900 dark:text-white">{selectedAdmin.adminId}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Name
                   </label>
-                  <p className="mt-1 text-black dark:text-white">{selectedAdmin.adminName}</p>
+                  <p className="mt-1 text-gray-900 dark:text-white">{selectedAdmin.adminName}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">
+                  <label className="block text-sm font-bold text-teal-700 dark:text-teal-300">
                     Email
                   </label>
-                  <p className="mt-1 text-black dark:text-white">{selectedAdmin.adminEmail}</p>
+                  <p className="mt-1 text-gray-900 dark:text-white">{selectedAdmin.adminEmail}</p>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-center">
                   <button
                     type="button"
                     onClick={() => setSelectedAdmin(null)}
-                    className="px-4 py-2 bg-white/30 dark:bg-gray-800/30 border border-white/50 dark:border-white/20 text-black dark:text-white rounded-md hover:bg-white/40 dark:hover:bg-gray-800/40"
+                    className="px-4 py-2 bg-white dark:bg-teal-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
                   >
                     Close
                   </button>

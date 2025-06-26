@@ -60,10 +60,21 @@ export const PropertyTypeChart = ({ properties }) => {
               />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  borderColor: '#e2e8f0',
-                  borderRadius: '0.375rem',
+                content={({ payload }) => {
+                  if (!payload || !payload.length) return null;
+                  return (
+                    <div className="bg-white dark:bg-gray-900 text-sm p-2 rounded shadow border border-gray-300 dark:border-gray-700">
+                      {payload.map((entry, index) => (
+                        <p
+                          key={`item-${index}`}
+                          style={{ color: entry.color }}
+                          className="font-medium"
+                        >
+                          {`${entry.name}: ${entry.value}`}
+                        </p>
+                      ))}
+                    </div>
+                  );
                 }}
               />
               <Legend />
@@ -72,7 +83,7 @@ export const PropertyTypeChart = ({ properties }) => {
                 stackId="a"
                 fill="#0f766e"
                 stroke="#ffffff"
-                strokeWidth={1}
+                strokeWidth={0}
                 animationDuration={1000}
               />
               <Bar
@@ -80,7 +91,7 @@ export const PropertyTypeChart = ({ properties }) => {
                 stackId="a"
                 fill="#991b1b"
                 stroke="#ffffff"
-                strokeWidth={1}
+                strokeWidth={0}
                 animationDuration={1000}
               />
             </BarChart>
