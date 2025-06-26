@@ -190,26 +190,69 @@ const getDeviceById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+//  Create floor with dynamic wings and rooms (empty devices)
+const createDynamicFloor = async (req, res) => {
+  try {
+    const { floorName, wings } = req.body;
 
-// Controller to update location and status of a device
+    //  Validate input
+    if (!floorName || !Array.isArray(wings) || wings.length === 0) {
+      return res.status(400).json({
+        message: "floorName and wings (with rooms) are required.",
+      });
+    }
+
+    //  Check if floor already exists
+    const existingFloor = await Floor.findOne({ floorName });
+    if (existingFloor) {
+      return res.status(400).json({
+        message: "A floor with this name already exists.",
+      });
+    }
+
+    // Build the floor object
+    const floorData = {
+      floorName,
+      wings: wings.map((wing) => ({
+        wingName: wing.wingName,
+        rooms: (wing.rooms || []).map((roomName) => ({
+          roomName,
+          devices: [],
+        })),
+      })),
+    };
+
+    //  Save to DB
+    const newFloor = new Floor(floorData);
+    const savedFloor = await newFloor.save();
+
+    res.status(201).json({
+      message: "Dynamic floor created successfully.",
+      floor: savedFloor,
+    });
+  } catch (error) {
+    console.error("Error creating dynamic floor:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 const updateDeviceLocationAndStatus = async (req, res) => {
-  console.log("📦 Received body:", req.body);
+  console.log(" Received body:", req.body);
 
-  const {
-    deviceBarcode,
-    newFloorName,
-    newWingName,
-    newRoomName,
-    newStatus,
-  } = req.body;
+  const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } =
+    req.body;
 
-  if (!deviceBarcode || !newFloorName || !newWingName || !newRoomName || !newStatus) {
+  if (
+    !deviceBarcode ||
+    !newFloorName ||
+    !newWingName ||
+    !newRoomName ||
+    !newStatus
+  ) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
   try {
-    // Step 1: Find the floor that contains the device
     const floors = await Floor.find();
     let sourceFloor, sourceWing, sourceRoom, foundDevice;
 
@@ -237,31 +280,25 @@ const updateDeviceLocationAndStatus = async (req, res) => {
       return res.status(404).json({ message: "Device not found" });
     }
 
-    // Update status
     foundDevice.deviceStatus = newStatus;
 
-    // Step 2: Find or create the target floor
     let targetFloor = floors.find((f) => f.floorName === newFloorName);
     if (!targetFloor) {
       return res.status(404).json({ message: "Target floor not found" });
     }
 
-    // Step 3: Find or create the target wing
     let targetWing = targetFloor.wings.find((w) => w.wingName === newWingName);
     if (!targetWing) {
       return res.status(404).json({ message: "Target wing not found" });
     }
 
-    // Step 4: Find or create the target room
     let targetRoom = targetWing.rooms.find((r) => r.roomName === newRoomName);
     if (!targetRoom) {
       return res.status(404).json({ message: "Target room not found" });
     }
 
-    // Step 5: Push device to new location
     targetRoom.devices.push(foundDevice);
 
-    // Save source floor only if different from target
     if (sourceFloor._id.toString() !== targetFloor._id.toString()) {
       await sourceFloor.save();
     }
@@ -271,14 +308,16 @@ const updateDeviceLocationAndStatus = async (req, res) => {
       .status(200)
       .json({ message: "Device moved and status updated successfully." });
   } catch (error) {
-    console.error("❌ Error updating device:", error);
+    console.error(" Error updating device:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 module.exports = {
+  createOrUpdateFloor,
   getAllFloors,
   filterByfloors,
   getDeviceById,
-  createOrUpdateFloor,
-  updateDeviceLocationAndStatus
+  createDynamicFloor,
+  updateDeviceLocationAndStatus,
 };
