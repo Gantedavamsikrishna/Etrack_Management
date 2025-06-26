@@ -2,24 +2,78 @@ import React, { useState } from 'react';
 import { PropertyCard } from './PropertyCard';
 import { PropertyModal } from './PropertyModal';
 import WifiLoader from '../../utils/Loader';
+import {
+  Monitor,
+  Keyboard,
+  Mouse,
+  Fan,
+  Lightbulb,
+  Wifi,
+  AirVent,
+  Printer,
+  Scan,
+  Speaker,
+  Mic,
+  Cpu,
+  Laptop,
+  BatteryCharging,
+  Network,
+  LayoutDashboard,
+  Presentation,
+  Camera,
+  Fingerprint,
+  Tv,
+  Plug,
+  Cable,
+  AlarmClock,
+  Gamepad,
+  HelpCircle,
+  ChevronDown,
+  Plus,
+  X,
+} from 'lucide-react';
 
-const PropertyType = {
-  Monitor: 'monitor',
-  Keyboard: 'keyboard',
-  Mouse: 'mouse',
-  Fan: 'fan',
-  Light: 'light',
-  Router: 'wifi-router',
-  AC: 'ac',
+const propertyIcons = {
+  monitor: <Monitor className="h-8 w-8" />,
+  keyboard: <Keyboard className="h-8 w-8" />,
+  mouse: <Mouse className="h-8 w-8" />,
+  fan: <Fan className="h-8 w-8" />,
+  light: <Lightbulb className="h-8 w-8" />,
+  'wifi-router': <Wifi className="h-8 w-8" />,
+  ac: <AirVent className="h-8 w-8" />,
+  projector: <Presentation className="h-8 w-8" />,
+  printer: <Printer className="h-8 w-8" />,
+  scanner: <Scan className="h-8 w-8" />,
+  speaker: <Speaker className="h-8 w-8" />,
+  microphone: <Mic className="h-8 w-8" />,
+  cpu: <Cpu className="h-8 w-8" />,
+  laptop: <Laptop className="h-8 w-8" />,
+  ups: <BatteryCharging className="h-8 w-8" />,
+  inverter: <BatteryCharging className="h-8 w-8" />,
+  'network-switch': <Network className="h-8 w-8" />,
+  whiteboard: <LayoutDashboard className="h-8 w-8" />,
+  smartboard: <LayoutDashboard className="h-8 w-8" />,
+  podium: <Presentation className="h-8 w-8" />,
+  cctv: <Camera className="h-8 w-8" />,
+  'biometric-scanner': <Fingerprint className="h-8 w-8" />,
+  tv: <Tv className="h-8 w-8" />,
+  'power-strip': <Plug className="h-8 w-8" />,
+  'extension-box': <Plug className="h-8 w-8" />,
+  'network-cable': <Cable className="h-8 w-8" />,
+  'hdmi-cable': <Cable className="h-8 w-8" />,
+  'vga-cable': <Cable className="h-8 w-8" />,
+  'remote-control': <Gamepad className="h-8 w-8" />,
+  'alarm-system': <AlarmClock className="h-8 w-8" />,
+  'access-point': <Wifi className="h-8 w-8" />,
+  default: <HelpCircle className="h-8 w-8" />,
 };
 
 const PropertyStatus = {
   Working: 'working',
   NotWorking: 'not_working',
-  // UnderMaintenance: 'under_maintenance',
 };
 
-export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelete, enableEdit = true }) => {
+export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelete, enableEdit = true, loading }) => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -53,13 +107,10 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
   };
 
   const filteredProperties = properties.filter((property) => {
-    // Filter by type
     if (filterType !== 'all' && property.type !== filterType) {
       return false;
     }
-    // Filter by status
     if (filterStatus !== 'all') {
-      // Map data status to enum for comparison
       const normalizedStatus = property.status === 'working' ? 'working' : 'not_working';
       if (normalizedStatus !== filterStatus) {
         return false;
@@ -80,18 +131,6 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
       <div className="flex flex-col sm:flex-row sm:items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
         <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-          {/* <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Types ({allCount})</option>
-            {Object.values(PropertyType).map((type) => (
-              <option key={type} value={type}>
-                {type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} ({propertyCounts[type] || 0})
-              </option>
-            ))}
-          </select> */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -106,11 +145,15 @@ export const PropertyList = ({ properties, title = 'Properties', onEdit, onDelet
           </select>
         </div>
       </div>
-      {filteredProperties.length === 0 ? (
+      {loading ? (
         <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="h-[250px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
             <WifiLoader className="scale-[2]" />
           </div>
+        </div>
+      ) : filteredProperties.length === 0 ? (
+        <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <p className="text-gray-600 dark:text-gray-400">No devices found for the selected filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
