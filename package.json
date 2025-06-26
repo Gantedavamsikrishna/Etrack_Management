@@ -14,8 +14,9 @@
     "cors": "^2.8.5",
     "etrack_backend": "file:",
     "express": "^5.1.0",
-    "mongoose": "^8.15.0",
-    "multer": "^2.0.1"
+    "mongoose": "^8.16.0",
+    "multer": "^2.0.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
