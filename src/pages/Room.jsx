@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
@@ -11,7 +13,6 @@ export const Room = () => {
   const { floorId, hallId, roomId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-
   const [floors, setFloors] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,6 +23,7 @@ export const Room = () => {
     }
 
     const fetchFloors = async () => {
+      setLoading(true);
       try {
         const response = await fetch(
           "https://etrack-backend.onrender.com/floor/getAllFloors",
@@ -31,7 +33,6 @@ export const Room = () => {
             },
           }
         );
-
         const data = await response.json();
         if (response.ok) {
           const mappedFloors = data.map((floor) => ({
@@ -79,7 +80,6 @@ export const Room = () => {
               })),
             })),
           }));
-
           setFloors(mappedFloors);
         } else {
           console.error("Failed to fetch floors:", data.message);
@@ -96,26 +96,33 @@ export const Room = () => {
 
   if (loading) {
     return (
-      <div className="h-[550px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <WifiLoader className="scale-[2]" />
+      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <div className="h-[550px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <WifiLoader className="scale-[2]" />
+        </div>
       </div>
     );
   }
 
   const floor = floors.find((f) => f.id === parseInt(floorId));
-  const hall = floor?.halls?.find((h) => h.id === parseInt(hallId).toString());
-  const room = hall?.rooms?.find((r) => r.id === parseInt(roomId).toString());
+  const hall = floor?.halls?.find((h) => h.id === hallId);
+  const room = hall?.rooms?.find((r) => r.id === roomId);
 
   if (!floor || !hall || !room) {
     return (
-      <div className="h-[700px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <WifiLoader className="scale-[2]" />
+      <div className="p-6">
+        <PropertyList
+          properties={[]}
+          title="Room Not Found"
+          enableEdit={false}
+          loading={false}
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <nav className="flex items-center text-sm font-medium">
         <Link
           to="/"
@@ -161,7 +168,7 @@ export const Room = () => {
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Working</p>
-          <p className="text-xl font-semibold mt-1 text-success-600 dark:text-success-400">
+          <p className="text-xl font-semibold mt-1 text-blue-600 dark:text-blue-400">
             {room.properties?.filter((p) => p.status === "working").length || 0}
           </p>
         </div>
@@ -169,7 +176,7 @@ export const Room = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Not Working
           </p>
-          <p className="text-xl font-semibold mt-1 text-error-600 dark:text-error-400">
+          <p className="text-xl font-semibold mt-1 text-red-600 dark:text-red-400">
             {room.properties?.filter((p) => p.status === "not_working")
               .length || 0}
           </p>
@@ -197,6 +204,7 @@ export const Room = () => {
         properties={room.properties || []}
         title={`Properties in ${room.name}`}
         enableEdit={false}
+        loading={loading}
       />
     </div>
   );

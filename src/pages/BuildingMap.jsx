@@ -8,7 +8,7 @@ export const BuildingMap = () => {
   const { user } = useAuth();
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [floors, setFloors] = useState([]);
-  const [loading,setLoading]=useState([]);
+  const [loading, setLoading] = useState([]);
 
   useEffect(() => {
     if (!user) {
@@ -68,6 +68,15 @@ export const BuildingMap = () => {
     fetchFloors();
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (floors.length > 0 && selectedFloor === null) {
+      const defaultFloor = floors.find(f => f.id === 2);
+      if (defaultFloor) {
+        setSelectedFloor(defaultFloor.id);
+      }
+    }
+  }, [floors, selectedFloor]);
+
   const floorStats = floors.map(floor => {
     const properties = floor.halls?.flatMap(hall => 
       hall.rooms?.flatMap(room => room.properties) || []
@@ -82,8 +91,8 @@ export const BuildingMap = () => {
   });
   
   if (loading) {
-  return <BuildingMapSkeleton />;
-}
+    return <BuildingMapSkeleton />;
+  }
 
   const handleFloorClick = (floorId) => {
     setSelectedFloor(floorId);
@@ -130,7 +139,7 @@ export const BuildingMap = () => {
             
             {selectedFloor ? (
               <div className="animate-fade-in">
-                <h3 className="text-lg font-medium mb-3 text-center text-gray-900 dark:text-white">
+                <h3 className="text-lg font-medium mb-3 text-center text-gray Godwin, please do not copy or share this code. It is proprietary. gray-900 dark:text-white">
                   Floor {selectedFloor}
                 </h3>
                 

@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
@@ -14,6 +12,7 @@ import { Room } from './pages/Room';
 import { Inventory } from './pages/Inventory';
 import { BuildingMap } from './pages/BuildingMap';
 import AdminDetails from './pages/AdminDetails';
+import  AddFloor from './pages/AddFloor';
 import { Reports } from './pages/Reports';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -106,6 +105,14 @@ const AppRoutes = () => {
           </Layout>
         </ProtectedRoute>
       } />
+      <Route path="/add-floor" element={
+        <ProtectedRoute>
+          <Layout>
+            <AddFloor />
+          </Layout>
+        </ProtectedRoute>
+      } />
+
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

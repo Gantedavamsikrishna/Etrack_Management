@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ChevronRight, DoorOpen } from "lucide-react";
@@ -5,7 +6,6 @@ import { Card, CardContent } from "../components/ui/Card";
 import { PropertyList } from "../components/property/PropertyList";
 import { StatusChart } from "../components/charts/StatusChart";
 import { PropertyTypeChart } from "../components/charts/PropertyTypeChart";
-import { LocationChart } from "../components/charts/LocationChart";
 import { useAuth } from "../context/AuthContext";
 import WifiLoader from "../utils/Loader";
 
@@ -137,8 +137,11 @@ export const Hall = () => {
   const notWorkingStatsProperties = statsProperties.filter((p) => p.status === "not_working").length;
   const totalBaysOrRooms = selectedBay ? 1 : hall.bays.length;
 
-  // Wing/Corridor-level properties for charts
-  const chartProperties = hall.bays.flatMap((bay) => bay.properties);
+  // Overall properties for charts (all bays)
+  const overallChartProperties = hall.bays.flatMap((bay) => bay.properties);
+
+  // Selected bay properties for charts (only selected bay)
+  const selectedBayChartProperties = selectedBay ? selectedBay.properties : [];
 
   // Properties for PropertyList (dynamic based on selected bay/room or wing/Corridor)
   const listProperties = selectedBay
@@ -219,13 +222,18 @@ export const Hall = () => {
         </div>
       </div>
 
-      {chartProperties.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-4">
-            <StatusChart properties={chartProperties} />
-          </div>
-          <div className="lg:col-span-8">
-            <PropertyTypeChart properties={chartProperties} />
+      {overallChartProperties.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Overall {isCorridor ? "Room" : "Bay"} Statistics
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4">
+              <StatusChart properties={overallChartProperties} />
+            </div>
+            <div className="lg:col-span-8">
+              <PropertyTypeChart properties={overallChartProperties} />
+            </div>
           </div>
         </div>
       )}
@@ -261,12 +269,6 @@ export const Hall = () => {
                         <span className="text-gray-500 dark:text-gray-400">Properties:</span>
                         <span className="font-medium">{bayProps.length}</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Working:</span>
-                        <span className="font-medium text-success-600 dark:text-success-400">
-                          {working} ({percentage}%)
-                        </span>
-                      </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-2">
                         <div
                           className="bg-primary-600 dark:bg-primary-400 h-2.5 rounded-full"
@@ -282,12 +284,19 @@ export const Hall = () => {
         </div>
       </div>
 
-      {hall.bays.length > 0 && (
+      {selectedBay && selectedBayChartProperties.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            {isCorridor ? "Room Comparison" : "Bay Comparison"}
+            Selected {isCorridor ? "Room" : "Bay"} Statistics: {selectedBay.name}
           </h2>
-          <LocationChart data={hall.bays} locationType={isCorridor ? "room" : "bay"} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4">
+              <StatusChart properties={selectedBayChartProperties} />
+            </div>
+            <div className="lg:col-span-8">
+              <PropertyTypeChart properties={selectedBayChartProperties} />
+            </div>
+          </div>
         </div>
       )}
 

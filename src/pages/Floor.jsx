@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Layers } from 'lucide-react';
@@ -14,16 +16,17 @@ export const Floor = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [floors, setFloors] = useState([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      console.log('No user, redirecting to login'); // Debug: Log no user
+      console.log('No user, redirecting to login');
       navigate('/login');
       return;
     }
 
     const fetchFloors = async () => {
+      setLoading(true);
       try {
         const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
           headers: {
@@ -31,16 +34,16 @@ export const Floor = () => {
           }
         });
         const data = await response.json();
-        console.log('API Response:', data); // Debug: Log raw API response
+        console.log('API Response:', data);
         if (response.ok) {
           const mappedFloors = data.map(floor => ({
             id: parseInt(floor.floorName.match(/\d+/)[0]),
             name: floor.floorName,
             halls: (floor.wings || []).map((wing, wingIndex) => ({
-              id: wingIndex.toString(), // Use index as ID
+              id: wingIndex.toString(),
               name: wing.wingName,
               rooms: (wing.rooms || []).map((room, roomIndex) => ({
-                id: roomIndex.toString(), // Use index as ID
+                id: roomIndex.toString(),
                 name: room.roomName,
                 properties: (room.devices || []).map(device => ({
                   id: device.deviceBarcode,
@@ -65,7 +68,7 @@ export const Floor = () => {
               }))
             }))
           }));
-          console.log('Mapped Floors:', mappedFloors); // Debug: Log mapped data
+          console.log('Mapped Floors:', mappedFloors);
           setFloors(mappedFloors);
         } else {
           console.error('Failed to fetch floors:', data.message);
@@ -73,25 +76,37 @@ export const Floor = () => {
       } catch (error) {
         console.error('Error fetching floors:', error);
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
 
     fetchFloors();
   }, [user, navigate]);
 
-  console.log('Params:', { floorId }); // Debug: Log URL params
+  console.log('Params:', { floorId });
   const floor = floors.find((f) => f.id === parseInt(floorId));
-  console.log('Selected Floor:', floor); // Debug: Log found floor
-  console.log('Hall IDs:', floor?.halls.map(h => h.id)); // Debug: Log available hall IDs
+  console.log('Selected Floor:', floor);
+  console.log('Hall IDs:', floor?.halls.map(h => h.id));
 
-  if (loading || !floor) { // Include loading check
-    console.log('Floor not found:', { floorExists: !!floor }); // Debug: Log why condition failed
+  if (loading) {
     return (
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
         <div className="h-[520px] w-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <WifiLoader className="scale-[2]" />
         </div>
+      </div>
+    );
+  }
+
+  if (!floor) {
+    return (
+      <div className="p-6">
+        <PropertyList
+          properties={[]}
+          title="Floor Not Found"
+          enableEdit={false}
+          loading={false}
+        />
       </div>
     );
   }
@@ -111,7 +126,7 @@ export const Floor = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <nav className="flex items-center text-sm font-medium">
         <Link 
           to="/" 
@@ -124,9 +139,6 @@ export const Floor = () => {
       </nav>
 
       <div>
-        {/* <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {floor.name}
-        </h1> */}
         <p className="text-gray-600 dark:text-gray-400 mt-1 text-xl">
           Overview and management of all halls in this floor
         </p>
@@ -150,7 +162,7 @@ export const Floor = () => {
         
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Working</p>
-          <p className="text-xl font-semibold mt-1 text-success-600 dark:text-success-400">
+          <p className="text-xl font-semibold mt-1 text-blue-600 dark:text-blue-400">
             {workingProperties} ({totalProperties > 0 ? Math.round((workingProperties / totalProperties) * 100) : 0}%)
           </p>
         </div>
@@ -189,7 +201,7 @@ export const Floor = () => {
                 <CardContent className="p-0">
                   <div className="p-4">
                     <div className="flex items-center mb-2">
-                      <div className="p-2 rounded-md bg-secondary-100 dark:bg-secondary-900 text-secondary-600 dark:text-secondary-400 mr-3">
+                      <div className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 mr-3">
                         <Layers className="h-5 w-5" />
                       </div>
                       <h3 className="text-lg font-medium">{hall.name}</h3>
@@ -208,14 +220,14 @@ export const Floor = () => {
                       
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-500 dark:text-gray-400">Working:</span>
-                        <span className="font-medium text-success-600 dark:text-success-400">
+                        <span className="font-medium text-blue-600 dark:text-blue-400">
                           {working} ({percentage}%)
                         </span>
                       </div>
                       
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-900 rounded-full h-2.5 mt-2">
                         <div
-                          className="bg-primary-600 dark:bg-primary-400 h-2.5 rounded-full"
+                          className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
@@ -237,13 +249,12 @@ export const Floor = () => {
         </div>
       )}
 
-      {totalProperties > 0 && (
-        <PropertyList 
-          properties={allProperties} 
-          title={`All Properties in ${floor.name}`} 
-          enableEdit={false} // Disable editing
-        />
-      )}
+      <PropertyList 
+        properties={allProperties} 
+        title={`All Properties in ${floor.name}`} 
+        enableEdit={false}
+        loading={loading}
+      />
     </div>
   );
 };

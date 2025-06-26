@@ -63,6 +63,53 @@ export const Sidebar = ({ isOpen, onClose }) => {
   const [expandedHalls, setExpandedHalls] = useState({});
   const [floors, setFloors] = useState([]);
 
+  const fetchFloors = async () => {
+    try {
+      const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+      const data = await response.json();
+      console.log('Sidebar API Response:', data);
+      if (response.ok) {
+        const mappedFloors = data.map(floor => ({
+          id: parseInt(floor.floorName.match(/\d+/)[0]),
+          name: floor.floorName,
+          halls: (floor.wings || []).map((wing, wingIndex) => ({
+            id: wingIndex.toString(),
+            name: wing.wingName,
+            rooms: (wing.rooms || []).map((room, roomIndex) => ({
+              id: roomIndex.toString(),
+              name: room.roomName,
+              properties: (room.devices || []).flatMap(device => 
+                Array(device.count || 1).fill().map(() => ({
+                  id: `${device.deviceName}-${Math.random().toString(36).substring(2, 11)}`,
+                  type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
+                        device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
+                        device.deviceName.toLowerCase().includes('fan') ? 'fan' :
+                        device.deviceName.toLowerCase().includes('ac') ? 'ac' :
+                        device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
+                        device.deviceName.toLowerCase().includes('light') ? 'light' :
+                        device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
+                  brand: device.deviceName.split(' ')[0] || 'Unknown',
+                  model: device.deviceModel || 'Unknown',
+                  status: device.deviceStatus === 'working' ? 'working' : 'not_working'
+                }))
+              )
+            }))
+          }))
+        }));
+        console.log('Sidebar Mapped Floors:', mappedFloors);
+        setFloors(mappedFloors);
+      } else {
+        console.error('Failed to fetch floors:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching floors:', error);
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       console.log('No user, redirecting to login');
@@ -70,55 +117,20 @@ export const Sidebar = ({ isOpen, onClose }) => {
       return;
     }
 
-    const fetchFloors = async () => {
-      try {
-        const response = await fetch('https://etrack-backend.onrender.com/floor/getAllFloors', {
-          headers: {
-            'Authorization': `Bearer ${user.token}`
-          }
-        });
-        const data = await response.json();
-        console.log('Sidebar API Response:', data);
-        if (response.ok) {
-          const mappedFloors = data.map(floor => ({
-            id: parseInt(floor.floorName.match(/\d+/)[0]),
-            name: floor.floorName,
-            halls: (floor.wings || []).map((wing, wingIndex) => ({
-              id: wingIndex.toString(),
-              name: wing.wingName,
-              rooms: (wing.rooms || []).map((room, roomIndex) => ({
-                id: roomIndex.toString(),
-                name: room.roomName,
-                properties: (room.devices || []).flatMap(device => 
-                  Array(device.count || 1).fill().map(() => ({
-                    id: `${device.deviceName}-${Math.random().toString(36).substring(2, 11)}`,
-                    type: device.deviceName.toLowerCase().includes('monitor') ? 'monitor' :
-                          device.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
-                          device.deviceName.toLowerCase().includes('fan') ? 'fan' :
-                          device.deviceName.toLowerCase().includes('ac') ? 'ac' :
-                          device.deviceName.toLowerCase().includes('keyboard') ? 'keyboard' :
-                          device.deviceName.toLowerCase().includes('light') ? 'light' :
-                          device.deviceName.toLowerCase().includes('wifi-router') ? 'wifi-router' : 'unknown',
-                    brand: device.deviceName.split(' ')[0] || 'Unknown',
-                    model: device.deviceModel || 'Unknown',
-                    status: device.deviceStatus === 'working' ? 'working' : 'not_working'
-                  }))
-                )
-              }))
-            }))
-          }));
-          console.log('Sidebar Mapped Floors:', mappedFloors);
-          setFloors(mappedFloors);
-        } else {
-          console.error('Failed to fetch floors:', data.message);
-        }
-      } catch (error) {
-        console.error('Error fetching floors:', error);
-      }
-    };
-
     fetchFloors();
   }, [user, navigate]);
+
+  useEffect(() => {
+    const handleFloorDataUpdated = () => {
+      fetchFloors();
+    };
+
+    window.addEventListener('floorDataUpdated', handleFloorDataUpdated);
+
+    return () => {
+      window.removeEventListener('floorDataUpdated', handleFloorDataUpdated);
+    };
+  }, []);
 
   const toggleFloor = (floorId) => {
     setExpandedFloors((prev) => ({ ...prev, [floorId]: !prev[floorId] }));
@@ -151,8 +163,11 @@ export const Sidebar = ({ isOpen, onClose }) => {
             <NavItem to="/" icon={<Gauge className="h-5 w-5" />} label="Dashboard" end />
             <NavItem to="/inventory" icon={<LampDesk className="h-5 w-5" />} label="Inventory" />
             <NavItem to="/map" icon={<Map className="h-5 w-5" />} label="Building Map" />
-            <NavItem to="/reports" icon={<FileText className="h-5 w-5" />} label="Reports" />
-
+            <NavItem
+              to="/add-floor"
+              icon={<Building2 className="h-5 w-5" />}
+              label="Add Floor"
+            />
             <div className="pt-4 pb-2">
               <div className="flex items-center px-4">
                 <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -215,6 +230,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
                 </h3>
               </div>
             </div>
+            <NavItem to="/reports" icon={<FileText className="h-5 w-5" />} label="Reports" />
             <NavItem
               to="/admin-details"
               icon={<LampDesk className="h-5 w-5" />}
