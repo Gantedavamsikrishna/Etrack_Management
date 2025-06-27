@@ -8,8 +8,9 @@ export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login, isLoading } = useAuth();
+  const { login, isLoading } = useAuth(); 
   const navigate = useNavigate();
+  const [role, setRole] = useState("");
 
   // Background icon grid and particle animation
   useEffect(() => {
@@ -138,18 +139,29 @@ export const Login = () => {
   const handleSubmit = async () => {
     setError("");
 
-    if (!email || !password) {
-      setError("Please enter both email and password.");
+    if (!email || !password || !role) {
+      setError("Please enter email, password, and select a role.");
       return;
     }
 
     try {
-      console.log('Attempting login with:', { email }); // Debug log
-      const success = await login(email, password);
-      if (success) {
-        navigate("/");
+      // Attempt login and get user info (including role)
+      const user = await login(email, password, role);
+
+      if (user && user.success) {
+        // Role-based redirection
+        if (user.role === "admin") {
+          // If user is admin, open the admin dashboard
+          navigate("/admin-dashboard");
+        } else if (user.role === "floorincharge" || user.role === "electrician") {
+          console.log("Redirecting to student UI");
+          window.location.href = "https://etrack-student-ui.vercel.app/";
+        } else {
+          // Default fallback (optional)
+          navigate("/");
+        }
       } else {
-        setError("Invalid email or password.");
+        setError("Invalid email, password, or role.");
       }
     } catch (error) {
       setError("An error occurred during login.");
@@ -259,6 +271,29 @@ export const Login = () => {
                   placeholder="••••••••"
                 />
               </div>
+            </div>
+
+            <div className="animate-fade-in-delayed">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Select Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                required
+                className="pl-10 block w-full rounded-md  border-indigo-500/40 dark:border-teal-400/40 bg-gray-900 dark:bg-gray-800 text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:shadow-[0_0_20px_rgba(20,184,166,0.5)] p-3 backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-lg peer appearance-none"
+                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M6 8L10 12L14 8\' stroke=\'%23A5B4FC\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.5em' }}
+              >
+                <option value="">Select Role </option>
+                <option value="admin">Admin</option>
+                <option value="floorincharge">Floor Incharge</option>
+                <option value="electrician">Electrician</option>
+              </select>
             </div>
 
             <Button
