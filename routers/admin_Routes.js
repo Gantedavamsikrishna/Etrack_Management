@@ -52,4 +52,5 @@ router.get("/get", getAllAdmin);
 router.put("/update/:adminId", uploadingImage, updateAdminById);
 router.post("/login", loginAdmin);
 
-module.exports = router;
+module.exports = router; 
+  
