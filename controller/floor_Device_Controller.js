@@ -1,37 +1,25 @@
 const Floor = require("../modals/floors_Devices_Scheme");
 
+// Create or Update a Floor with wings/rooms/devices
 const createOrUpdateFloor = async (req, res) => {
   try {
     const { floorName, wingName, roomName, devices } = req.body;
 
-    if (
-      !floorName ||
-      !wingName ||
-      !roomName ||
-      !devices ||
-      !Array.isArray(devices)
-    ) {
+    if (!floorName || !wingName || !roomName || !devices || !Array.isArray(devices)) {
       return res.status(400).json({
         message: "All fields are required and devices must be an array.",
       });
     }
 
-    // 1. Check if floor exists
     let floor = await Floor.findOne({ floorName });
 
     if (!floor) {
-      // Floor doesn't exist → create new
       floor = new Floor({
         floorName,
         wings: [
           {
             wingName,
-            rooms: [
-              {
-                roomName,
-                devices,
-              },
-            ],
+            rooms: [{ roomName, devices }],
           },
         ],
       });
@@ -42,30 +30,14 @@ const createOrUpdateFloor = async (req, res) => {
       });
     }
 
-    // 2. Floor exists → check wing
     let wing = floor.wings.find((w) => w.wingName === wingName);
     if (!wing) {
-      // Wing not found → add new wing
-      floor.wings.push({
-        wingName,
-        rooms: [
-          {
-            roomName,
-            devices,
-          },
-        ],
-      });
+      floor.wings.push({ wingName, rooms: [{ roomName, devices }] });
     } else {
-      // 3. Wing exists → check room
       let room = wing.rooms.find((r) => r.roomName === roomName);
       if (!room) {
-        // Room not found → add new room
-        wing.rooms.push({
-          roomName,
-          devices,
-        });
+        wing.rooms.push({ roomName, devices });
       } else {
-        // 4. Room exists → append devices
         room.devices.push(...devices);
       }
     }
@@ -82,7 +54,7 @@ const createOrUpdateFloor = async (req, res) => {
   }
 };
 
-//get all floors data
+// Get All Floors
 const getAllFloors = async (req, res) => {
   try {
     const floors = await Floor.find();
@@ -92,11 +64,11 @@ const getAllFloors = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-// filter floors by name and wings and rooms and devices
+
+// Filter Floors by multiple nested parameters
 const filterByfloors = async (req, res) => {
   try {
-    const { floorName, wingName, roomName, deviceName, deviceStatus } =
-      req.query;
+    const { floorName, wingName, roomName, deviceName, deviceStatus } = req.query;
 
     let floorFilter = {};
     if (floorName) floorFilter.floorName = { $regex: floorName, $options: "i" };
@@ -129,10 +101,10 @@ const filterByfloors = async (req, res) => {
               d.deviceName?.toLowerCase().includes(deviceName.toLowerCase())
             );
           }
+
           if (deviceStatus) {
             devices = devices.filter(
-              (d) =>
-                d.deviceStatus?.toLowerCase() === deviceStatus.toLowerCase()
+              (d) => d.deviceStatus?.toLowerCase() === deviceStatus.toLowerCase()
             );
           }
 
@@ -147,12 +119,12 @@ const filterByfloors = async (req, res) => {
 
     res.status(200).json(filteredFloors);
   } catch (err) {
-    console.error("Error fetching floors:", err);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch floors", error: err.message });
+    console.error("Error filtering floors:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+// Get Device by Barcode
 const getDeviceById = async (req, res) => {
   const { deviceBarcode } = req.params;
   try {
@@ -190,19 +162,18 @@ const getDeviceById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-//  Create floor with dynamic wings and rooms (empty devices)
+
+// Create dynamic floor with wings and empty rooms
 const createDynamicFloor = async (req, res) => {
   try {
     const { floorName, wings } = req.body;
 
-    //  Validate input
     if (!floorName || !Array.isArray(wings) || wings.length === 0) {
       return res.status(400).json({
         message: "floorName and wings (with rooms) are required.",
       });
     }
 
-    //  Check if floor already exists
     const existingFloor = await Floor.findOne({ floorName });
     if (existingFloor) {
       return res.status(400).json({
@@ -210,7 +181,6 @@ const createDynamicFloor = async (req, res) => {
       });
     }
 
-    // Build the floor object
     const floorData = {
       floorName,
       wings: wings.map((wing) => ({
@@ -222,7 +192,6 @@ const createDynamicFloor = async (req, res) => {
       })),
     };
 
-    //  Save to DB
     const newFloor = new Floor(floorData);
     const savedFloor = await newFloor.save();
 
@@ -236,19 +205,55 @@ const createDynamicFloor = async (req, res) => {
   }
 };
 
+// ✅ NEW: Update floor name and wings
+const updateFloorAndWings = async (req, res) => {
+  const { oldFloorName, newFloorName, updatedWings } = req.body;
+
+  console.log("Received payload:", req.body); // Log the payload
+
+  if (!oldFloorName || !newFloorName || !Array.isArray(updatedWings)) {
+    return res.status(400).json({ message: "Required fields are missing." });
+  }
+
+  try {
+    const floor = await Floor.findOne({ floorName: oldFloorName });
+
+    if (!floor) {
+      return res.status(404).json({ message: "Floor not found" });
+    }
+
+    floor.floorName = newFloorName;
+    floor.wings = updatedWings;
+
+    const updatedFloor = await floor.save();
+
+    return res.status(200).json({ message: "Floor and wings updated", floor: updatedFloor });
+  } catch (error) {
+    console.error("Error updating floor:", error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+// ✅ NEW: Delete floor
+const deleteFloor = async (req, res) => {
+  const { floorName } = req.params;
+  try {
+    const deleted = await Floor.findOneAndDelete({ floorName });
+    if (!deleted) {
+      return res.status(404).json({ message: "Floor not found" });
+    }
+    res.status(200).json({ message: "Floor deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting floor:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Update device location and status
 const updateDeviceLocationAndStatus = async (req, res) => {
-  console.log(" Received body:", req.body);
+  const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } = req.body;
 
-  const { deviceBarcode, newFloorName, newWingName, newRoomName, newStatus } =
-    req.body;
-
-  if (
-    !deviceBarcode ||
-    !newFloorName ||
-    !newWingName ||
-    !newRoomName ||
-    !newStatus
-  ) {
+  if (!deviceBarcode || !newFloorName || !newWingName || !newRoomName || !newStatus) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
@@ -259,15 +264,12 @@ const updateDeviceLocationAndStatus = async (req, res) => {
     for (const floor of floors) {
       for (const wing of floor.wings) {
         for (const room of wing.rooms) {
-          const deviceIndex = room.devices.findIndex(
-            (d) => d.deviceBarcode === deviceBarcode
-          );
+          const deviceIndex = room.devices.findIndex((d) => d.deviceBarcode === deviceBarcode);
           if (deviceIndex !== -1) {
             foundDevice = room.devices[deviceIndex];
             sourceFloor = floor;
-            sourceWing = wing;
             sourceRoom = room;
-            room.devices.splice(deviceIndex, 1); // Remove from old
+            room.devices.splice(deviceIndex, 1);
             break;
           }
         }
@@ -282,17 +284,10 @@ const updateDeviceLocationAndStatus = async (req, res) => {
 
     foundDevice.deviceStatus = newStatus;
 
-    let targetFloor = floors.find((f) => f.floorName === newFloorName);
-    if (!targetFloor) {
-      return res.status(404).json({ message: "Target floor not found" });
-    }
+    const targetFloor = floors.find((f) => f.floorName === newFloorName);
+    const targetWing = targetFloor?.wings.find((w) => w.wingName === newWingName);
+    const targetRoom = targetWing?.rooms.find((r) => r.roomName === newRoomName);
 
-    let targetWing = targetFloor.wings.find((w) => w.wingName === newWingName);
-    if (!targetWing) {
-      return res.status(404).json({ message: "Target wing not found" });
-    }
-
-    let targetRoom = targetWing.rooms.find((r) => r.roomName === newRoomName);
     if (!targetRoom) {
       return res.status(404).json({ message: "Target room not found" });
     }
@@ -304,11 +299,9 @@ const updateDeviceLocationAndStatus = async (req, res) => {
     }
     await targetFloor.save();
 
-    res
-      .status(200)
-      .json({ message: "Device moved and status updated successfully." });
+    res.status(200).json({ message: "Device moved and status updated successfully." });
   } catch (error) {
-    console.error(" Error updating device:", error);
+    console.error("Error updating device:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -320,4 +313,6 @@ module.exports = {
   getDeviceById,
   createDynamicFloor,
   updateDeviceLocationAndStatus,
+  updateFloorAndWings, 
+  deleteFloor, 
 };
