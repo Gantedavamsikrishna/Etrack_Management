@@ -3,14 +3,13 @@ const admin = require("../modals/admin_Scheme");
 // Create a new admin
 const createAdmin = async (req, res) => {
   try {
-    const { adminId, adminName, adminEmail, adminPassword} =
-      req.body;
+    const { adminId, adminName, adminEmail, adminPassword } = req.body;
     const newAdmin = new admin({
       adminId,
       adminName,
       adminEmail,
       adminPassword,
-adminImage: req.file ? req.file.filename : null,
+      adminImage: req.file ? req.file.filename : null,
     });
     await newAdmin.save();
     res.status(201).json({
@@ -33,6 +32,24 @@ const getAllAdmin = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching admin data:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+//delete admin
+
+const deleteAdminById = async (req, res) => {
+  try {
+    const { adminId } = req.params; // Use route parameter for adminId
+    const deletedAdmin = await admin.findOneAndDelete({ adminId });
+    if (!deletedAdmin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    res.status(200).json({
+      message: "Admin deleted successfully",
+      deletedAdmin,
+    });
+  } catch (error) {
+    console.error("Error deleting admin:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -79,4 +96,10 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-module.exports = { createAdmin, getAllAdmin, updateAdminById, loginAdmin };
+module.exports = {
+  createAdmin,
+  getAllAdmin,
+  updateAdminById,
+  loginAdmin,
+  deleteAdminById,
+};
