@@ -148,8 +148,8 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok && data.token) {
         const userData = {
-          adminEmail: email,
-          adminName: data.adminName,
+          email: email,
+          name: data.adminName || email.split("@")[0],
           role: data.userRole,
           token: data.token,
         };

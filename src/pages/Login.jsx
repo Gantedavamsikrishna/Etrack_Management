@@ -164,6 +164,7 @@ export const Login = () => {
         setError("Invalid email, password, or role.");
       }
     } catch (error) {
+      console.error('Login error:', error);
       setError("An error occurred during login.");
     }
   };

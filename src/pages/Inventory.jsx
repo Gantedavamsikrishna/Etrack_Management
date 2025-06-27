@@ -86,6 +86,7 @@ export const Inventory = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [floors, setFloors] = useState([]);
   const [properties, setProperties] = useState([]);
+  const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modalError, setModalError] = useState('');
@@ -202,6 +203,7 @@ export const Inventory = () => {
         ) || []
       );
       setProperties(mappedProperties);
+      setFilteredProperties(mappedProperties);
       setError('');
     } catch (err) {
       console.error('Error fetching filtered devices:', err);
@@ -214,6 +216,7 @@ export const Inventory = () => {
         toastId: 'filter-error',
       });
       setProperties([]);
+      setFilteredProperties([]);
     } finally {
       setLoading(false);
     }
@@ -225,6 +228,37 @@ export const Inventory = () => {
     }
   }, [selectedFloor, selectedHall, selectedRoom, selectedDevice, floors, user]);
 
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredProperties(properties);
+      setError('');
+      return;
+    }
+
+    const filteredByBarcode = properties.filter((property) =>
+      property.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (filteredByBarcode.length === 0) {
+      setError('No devices found matching the barcode');
+      toast.error('No devices found matching the barcode', {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'search-error',
+      });
+    } else {
+      setError('');
+      toast.success('Devices found!', {
+        position: 'top-right',
+        autoClose: 3000,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        toastId: 'search-success',
+      });
+    }
+    setFilteredProperties(filteredByBarcode);
+  }, [searchTerm, properties]);
+
   const halls =
     selectedFloor === 'all'
       ? []
@@ -233,23 +267,6 @@ export const Inventory = () => {
     selectedHall === 'all'
       ? []
       : halls.find((h) => h._id === selectedHall)?.rooms || [];
-
-  const filteredProperties = properties.filter((property) => {
-    if (selectedFloor !== 'all') {
-      const floor = floors.find((f) => f._id === selectedFloor);
-      if (!floor || property.floorName !== floor.floorName) return false;
-    }
-    if (selectedHall !== 'all') {
-      const hall = halls.find((h) => h._id === selectedHall);
-      if (!hall || property.hallName !== hall.wingName) return false;
-    }
-    if (selectedRoom !== 'all') {
-      const room = rooms.find((r) => r._id === selectedRoom);
-      if (!room || property.roomName !== room.roomName) return false;
-    }
-    if (selectedDevice && property.type !== selectedDevice) return false;
-    return true;
-  });
 
   const handlePropertySubmit = async (e) => {
     e.preventDefault();
@@ -321,6 +338,7 @@ export const Inventory = () => {
           deviceLocation: floor.floorName + '/' + hall.wingName + '/' + room.roomName,
         };
         setProperties([...properties, newProp]);
+        setFilteredProperties([...filteredProperties, newProp]);
         setIsModalOpen(false);
         setNewProperty({
           id: '',
@@ -388,9 +406,13 @@ export const Inventory = () => {
       const response = await axiosInstance.put('/update-location-status', payload);
 
       if (response.status === 200) {
-        setProperties(
-          properties.map((prop) =>
-            prop.id === updatedProperty.id ? { ...prop, ...updatedProperty } : prop
+        const updatedProperties = properties.map((prop) =>
+          prop.id === updatedProperty.id ? { ...prop, ...updatedProperty } : prop
+        );
+        setProperties(updatedProperties);
+        setFilteredProperties(
+          updatedProperties.filter((property) =>
+            searchTerm ? property.id.toLowerCase().includes(searchTerm.toLowerCase()) : true
           )
         );
         setError('');
@@ -428,80 +450,13 @@ export const Inventory = () => {
     }
   };
 
-  const handleSearch = async (term) => {
-    if (!term.trim()) {
-      setSelectedFloor('all');
-      setSelectedHall('all');
-      setSelectedRoom('all');
-      setSelectedDevice('');
-      await fetchFilteredDevices();
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get(`/device/${term}`);
-      const { data } = response.data;
-      if (!data.device) {
-        throw new Error('Device data not found');
-      }
-
-      const mappedProperty = {
-        id: data.device.deviceBarcode || '',
-        name: data.device.deviceName || 'Unknown',
-        type: getDeviceType(data.device.deviceName),
-        brand: data.device.deviceName?.split(' ')[0] || 'Unknown',
-        model: data.device.deviceModel || 'Unknown',
-        status:
-          data.device.deviceStatus?.toLowerCase() === 'working'
-            ? 'working'
-            : data.device.deviceStatus?.toLowerCase() === 'not working' ||
-              data.device.deviceStatus?.toLowerCase() === 'under maintenance'
-            ? 'not_working'
-            : 'not_working',
-        price: data.device.devicePrice || 0,
-        purchaseDate: '',
-        floorId: '',
-        hallId: '',
-        roomId: '',
-        floorName: data.floorName || 'Unknown',
-        hallName: data.wingName || 'Unknown',
-        roomName: data.roomName || 'Unknown',
-        deviceLocation:
-          (data.floorName || 'Unknown') +
-          '/' +
-          (data.wingName || 'Unknown') +
-          '/' +
-          (data.roomName || 'Unknown'),
-      };
-
-      setProperties([mappedProperty]);
-      setError('');
-      toast.success('Device found!', {
-        position: 'top-right',
-        autoClose: 3000,
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-        toastId: 'search-success',
-      });
-    } catch (err) {
-      console.error('Error searching device:', err);
-      const errorMessage = err.response?.data?.message || 'Device not found';
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        position: 'top-right',
-        autoClose: 3000,
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-        toastId: 'search-error',
-      });
-      setProperties([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = (term) => {
+    setSearchTerm(term);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleSearch(searchTerm);
+      handleSearch(e.target.value);
     }
   };
 
@@ -554,7 +509,10 @@ export const Inventory = () => {
           }
           .modal-content {
             scrollbar-width: none;
-            ms-overflow-style: none;
+            -ms-overflow-style: none;
+            max-height: 80vh;
+            overflow-y: auto;
+            overscroll-behavior: contain;
           }
           select.custom-select option {
             background-color: #E5E7EB;
@@ -581,19 +539,21 @@ export const Inventory = () => {
         `}
       </style>
       <div
-        className="fixed inset-0 z-[200] bg-gray-800/60 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-[200] bg-gray-800/50 dark:bg-black/50"
         onClick={handleBackdropClick}
       />
       <div
-        className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4"
-        onClick={(e) => e.stopPropagation()}
+        className={cn(
+          'fixed inset-0 z-[201] flex items-center justify-center p-2 sm:p-4',
+          'w-full max-w-md mx-auto'
+        )}
       >
         <div
           className={cn(
-            'relative w-full max-w-md rounded-2xl p-6',
+            'relative w-full rounded-2xl p-6',
             'shadow-lg shadow-black/10 dark:shadow-white/10',
-            'bg-gray-200/30 dark:bg-white/10 backdrop-blur-md',
-            'border border-gray-300/40 dark:border-white/20 ring-1 ring-gray-300/40 dark:ring-white/20',
+            'bg-gray-200 dark:bg-gray-800',
+            'border border-gray-300 dark:border-gray-700 ring-1 ring-gray-300 dark:ring-gray-700',
             'text-gray-900 dark:text-white transition-colors duration-300',
             'max-h-[80vh] flex flex-col'
           )}
@@ -962,7 +922,7 @@ export const Inventory = () => {
                 id="search"
                 placeholder="Search properties..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="pl-3 pr-10 py-1.5 text-xs sm:pl-4 sm:pr-12 sm:py-2 sm:text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out w-full animate-border-form"
               />

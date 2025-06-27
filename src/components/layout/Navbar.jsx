@@ -54,66 +54,106 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
 
     socket.emit("register", "admin");
 
+    // socket.on("reportAlert", (data) => {
+    //   console.log("📨 New real-time report received:", data);
+
+    //   const newAlert = {
+    //     message: ` ${data.deviceBarcode} `,
+    //     status: data.deviceStatus || "unknown",
+    //     time: new Date().toISOString(),
+    //     device: `${data.deviceName} `,
+    //     type:
+    //       data.deviceStatus === "not-working" ||
+    //       data.deviceStatus === "critical"
+    //         ? "critical"
+    //         : "warning",
+    //     read: false,
+    //   };
+
+    //   setAlerts((prevAlerts) => [newAlert, ...prevAlerts]);
+    // });
+
     socket.on("reportAlert", (data) => {
-      console.log("📨 New real-time report received:", data);
+  const newAlert = {
+    _id: data._id, // ✅ add this
+    message: ` ${data.deviceBarcode} `,
+    status: data.deviceStatus || "unknown",
+    time: new Date().toISOString(),
+    device: `${data.deviceName} `,
+    type:
+      data.deviceStatus === "not-working" ||
+      data.deviceStatus === "critical"
+        ? "critical"
+        : "warning",
+    read: false,
+  };
+  setAlerts((prevAlerts) => [newAlert, ...prevAlerts]);
+});
 
-      const newAlert = {
-        message: ` ${data.deviceBarcode} `,
-        status: data.deviceStatus || "unknown",
-        time: new Date().toISOString(),
-        device: `${data.deviceName} `,
-        type:
-          data.deviceStatus === "not-working" ||
-          data.deviceStatus === "critical"
-            ? "critical"
-            : "warning",
-        read: false,
-      };
-
-      setAlerts((prevAlerts) => [newAlert, ...prevAlerts]);
-    });
 
     return () => {
       socket.off("reportAlert");
     };
   }, [user]);
 
-  const handleConfirmAlert = (alert) => {
-    if (!user) {
-      toast.error('Please log in to confirm alerts');
-      return;
-    }
-    console.log("Confirming alert:", alert._id);
-    addConfirmedAlert(alert);
-    setAlerts((prev) => prev.filter((a) => a._id !== alert._id)); // Remove from modal
-    toast.success('Alert confirmed and moved to Reports');
-  };
+  // const handleConfirmAlert = (alert) => {
+  //   if (!user) {
+  //     toast.error('Please log in to confirm alerts');
+  //     return;
+  //   }
+  //   console.log("Confirming alert:", alert._id);
+  //   addConfirmedAlert(alert);
+  //   setAlerts((prev) => prev.filter((a) => a._id !== alert._id)); // Remove from modal
+  //   toast.success('Alert confirmed and moved to Reports');
+  // };
 
-  const handleRemoveAlert = async (id) => {
-    if (!user) {
-      toast.error("Please log in to delete alerts");
-      return;
-    }
-    try {
-      console.log("Deleting alert:", id);
-      const response = await axios.delete(
-        `https://etrack-backend.onrender.com/report/delete/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
-      console.log("Delete API Response:", response.data);
-      setAlerts((prev) => prev.filter((alert) => alert._id !== id));
-      removeConfirmedAlert(id);
-      setConfirmDeleteId(null);
-      toast.success('Alert deleted successfully');
-    } catch (error) {
-      console.error("Error deleting alert:", error);
-      toast.error(error.response?.data?.message || 'Failed to delete alert');
-    }
-  };
+  const handleConfirmAlert = async (alert) => {
+  if (!user) {
+    toast.error('Please log in to confirm alerts');
+    return;
+  }
+  try {
+    const response = await axios.put(
+      `http://localhost:3000/report/confirm/${alert._id}`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${user.token}` },
+      }
+    );
+
+    setAlerts((prev) => prev.filter((a) => a._id !== alert._id));
+    toast.success('Alert confirmed and moved to Reports');
+  } catch (error) {
+    console.error(error);
+    toast.error(error.response?.data?.error || 'Failed to confirm alert');
+  }
+};
+
+ const handleRemoveAlert = async (id) => {
+  if (!user) {
+    toast.error("Please log in to delete alerts");
+    return;
+  }
+  try {
+    console.log("Deleting alert:", id);
+    const response = await axios.delete(
+      `http://localhost:3000/report/delete/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      }
+    );
+    console.log("Delete API Response:", response.data);
+
+    setAlerts((prev) => prev.filter((alert) => alert._id !== id));
+    setConfirmDeleteId(null);
+    toast.success('Alert deleted successfully');
+  } catch (error) {
+    console.error("Error deleting alert:", error);
+    toast.error(error.response?.data?.message || 'Failed to delete alert');
+  }
+};
 
   const unreadCount = alerts.length; // All alerts are unread until confirmed
 
