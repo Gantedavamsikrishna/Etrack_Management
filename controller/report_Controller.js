@@ -1,4 +1,6 @@
+const { getMaxListeners } = require("nodemailer/lib/xoauth2");
 const report = require("../modals/report_Scheme");
+const sendMail = require("../MailService");
 
 // Create a new report
 exports.createReport = async (req, res) => {
@@ -11,8 +13,26 @@ exports.createReport = async (req, res) => {
       console.log(" Report saved, emitting to admin:", savedReport);
       io.emit("reportAlert", savedReport);
     }
+    const to = "vamsiganteda@gmail.com" || "default@example.com"; // Replace with actual email field
+    const subject = "Report Created Successfully";
+    const text = `Hello Admin,
 
-    res.status(201).json(savedReport);
+    A new report has been submitted:
+    
+     Title: "from incharge"
+     deviceBarcode: ${savedReport.deviceBarcode}
+     deviceName:${savedReport.deviceName}
+     deviceStatus:${savedReport.deviceStatus}
+     Date: ${new Date().toLocaleString()}
+    👤 Submitted By: ${savedReport.userName || "Unknown"}
+    
+    Please check the system for more details.
+    
+    - E-Track System
+        `;
+
+    await sendMail(to, subject, text);
+    res.status(201).json(savedReport, "");
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -80,5 +100,3 @@ exports.confirmReport = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
