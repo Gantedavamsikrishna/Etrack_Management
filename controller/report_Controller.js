@@ -57,3 +57,28 @@ exports.updateReport = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+// Confirm a report by ID
+exports.confirmReport = async (req, res) => {
+  try {
+    const confirmedReport = await report.findByIdAndUpdate(
+      req.params.id,
+      { status: "confirmed" },
+      { new: true }
+    );
+
+    if (!confirmedReport) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("reportConfirmed", confirmedReport);
+    }
+
+    res.status(200).json(confirmedReport);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+

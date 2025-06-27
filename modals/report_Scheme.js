@@ -13,6 +13,19 @@ const reportSchema = new mongoose.Schema({
     type: String,
     default: "active",
   },
+  confirmed: {
+    type: Boolean,
+    default: false,
+  },
+  status: {
+    type: String,
+    enum: ["new", "confirmed", "resolved"],
+    default: "new",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model("report", reportSchema);
+module.exports = mongoose.model("Report", reportSchema);
