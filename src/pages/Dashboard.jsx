@@ -57,7 +57,7 @@ export const Dashboard = () => {
                     .map(() => ({
                       id: `${device.deviceName}-${Math.random()
                         .toString(36)
-                        .substr(2, 9)}`,
+                        .substring(2, 11)}`,
                       type: device.deviceName.toLowerCase().includes("monitor")
                         ? "monitor"
                         : device.deviceName.toLowerCase().includes("mouse")
@@ -230,13 +230,15 @@ export const Dashboard = () => {
           <StatusChart properties={allProperties} />
         </div>
         <div className="lg:col-span-7">
-          <PropertyTypeChart properties={allProperties} />
+          {/* <PropertyTypeChart properties={allProperties} /> */}
+          <PropertyTypeChart properties={allProperties} minCount={10} />
+
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {["monitor", "mouse", "keyboard", "light", "fan", "wifi-router", "ac"]
-          .filter((type) => propertyTypeCounts[type] > 0)
+          .filter((type) => propertyTypeCounts[type] < 10)
           .map((type) => {
             const count = propertyTypeCounts[type];
             const working = allProperties.filter(

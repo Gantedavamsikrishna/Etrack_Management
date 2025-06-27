@@ -36,8 +36,12 @@ export const AuthProvider = ({ children }) => {
       console.log('Login API response:', data);
 
       if (response.ok && data.message === 'Login successful') {
-        // Store minimal user data since backend doesn't provide admin object
-        const userData = { adminEmail: email };
+        // Store comprehensive user data including name and role
+        const userData = {
+          email: email,
+          name: data.adminName || email.split('@')[0], // Fallback to email prefix if name not provided
+          role: 'Admin', // Explicitly set role as Admin
+        };
         setUser(userData);
         localStorage.setItem('etrack-user', JSON.stringify(userData));
         setIsLoading(false);

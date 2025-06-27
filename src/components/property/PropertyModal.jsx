@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
@@ -198,24 +197,24 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
             background-color: #D1D5DB;
           }
           .custom-border {
-            border: 1px solid rgba(209, 213, 219, 0.4) !important;
+            border: 1px solid #D1D5DB !important;
           }
           @media (prefers-color-scheme: dark) {
             select.custom-select option {
-              background-color: #1F2937;
+              background-color: #374151;
               color: #FFFFFF;
             }
             select.custom-select option:hover {
-              background-color: #374151;
+              background-color: #4B5563;
             }
             .custom-border {
-              border: 1px solid rgba(255, 255, 255, 0.2) !important;
+              border: 1px solid #4B5563 !important;
             }
           }
         `}
       </style>
       <div
-        className="fixed inset-0 z-[200] bg-gray-800/60 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-[200] bg-gray-800/50 dark:bg-black/50"
         onClick={onClose}
       />
       <div
@@ -226,17 +225,17 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
           className={cn(
             'relative w-full max-w-md rounded-2xl p-6 modal-content',
             'shadow-lg shadow-black/10 dark:shadow-white/10',
-            'bg-gray-200/30 dark:bg-white/10 backdrop-blur-md',
-            'border border-gray-300/40 dark:border-white/20 ring-1 ring-gray-300/40 dark:ring-white/20',
+            'bg-gray-200 dark:bg-gray-800',
+            'border border-gray-300 dark:border-gray-700 ring-1 ring-gray-300 dark:ring-gray-700',
             'text-gray-900 dark:text-white transition-colors duration-300',
             'flex flex-col'
           )}
         >
-          <div className="flex justify-between items-center border-b border-gray-300/40 dark:border-white/20 pb-4">
+          <div className="flex justify-between items-center border-b border-gray-300 dark:border-gray-700 pb-4">
             <h2 className="text-xl font-bold">Property Details</h2>
             <button
               onClick={onClose}
-              className="text-gray-600 dark:text-white/80 hover:text-gray-800 dark:hover:text-white hover:bg-gray-300/20 dark:hover:bg-white/20 rounded-md p-1 transition-colors duration-200"
+              className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-300 dark:hover:bg-gray-700 rounded-md p-1 transition-colors duration-200"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -249,15 +248,15 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                 className={cn(
                   'p-4 rounded-full mr-4',
                   (isEditing ? formData.status : property.status) === 'working'
-                    ? 'bg-green-100/20 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                    : 'bg-red-100/20 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    ? 'bg-green-500 dark:bg-green-600 text-white'
+                    : 'bg-red-500 dark:bg-red-600 text-white'
                 )}
               >
                 {propertyIcons[property.type] || propertyIcons.default}
               </div>
               <div>
                 <h3 className="text-lg font-medium">{formatType(property.type)}</h3>
-                <p className="text-sm text-gray-600 dark:text-white/80">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   {property.brand || 'Unknown'} {property.model || 'Unknown'}
                 </p>
               </div>
@@ -266,13 +265,13 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                     Brand
                   </h4>
                   <p className="text-sm sm:text-base">{property.brand || 'N/A'}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                     Model
                   </h4>
                   <p className="text-sm sm:text-base">{property.model || 'N/A'}</p>
@@ -282,14 +281,14 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {property.purchaseDate && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                    <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                       Purchase Date
                     </h4>
                     <p className="text-sm sm:text-base">{property.purchaseDate || 'N/A'}</p>
                   </div>
                 )}
                 <div className={cn(enableEdit && 'field-container')}>
-                  <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                     Status
                   </h4>
                   {enableEdit && isEditing ? (
@@ -297,7 +296,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
+                      className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
                     >
                       <option value="working">Working</option>
                       <option value="not_working">Not Working</option>
@@ -307,8 +306,8 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                       className={cn(
                         'inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium w-full max-w-[120px] sm:max-w-[140px]',
                         (isEditing ? formData.status : property.status) === 'working'
-                          ? 'bg-green-100/20 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                          : 'bg-red-100/20 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                          ? 'bg-green-500 dark:bg-green-600 text-white'
+                          : 'bg-red-500 dark:bg-red-600 text-white'
                       )}
                     >
                       {(isEditing ? formData.status : property.status) === 'working'
@@ -320,14 +319,14 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                   Barcode
                 </h4>
                 <p className="text-sm sm:text-base">{property.id || 'N/A'}</p>
               </div>
 
               <div className="field-container">
-                <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                   Location
                 </h4>
                 {!isEditing ? (
@@ -335,7 +334,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                 ) : (
                   <div className="edit-mode-grid space-y-4">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                         Floor
                       </h4>
                       <div className="relative">
@@ -343,7 +342,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                           name="floorId"
                           value={formData.floorId}
                           onChange={handleInputChange}
-                          className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
+                          className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out pr-10"
                           disabled={loading}
                         >
                           <option value="">Select Floor</option>
@@ -353,12 +352,12 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
+                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-300" />
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                         Wing
                       </h4>
                       <div className="relative">
@@ -366,7 +365,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                           name="hallId"
                           value={formData.hallId}
                           onChange={handleInputChange}
-                          className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
+                          className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
                           disabled={!formData.floorId || loading}
                         >
                           <option value="">Select Wing</option>
@@ -376,12 +375,12 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
+                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-300" />
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-800 dark:text-white/80 mb-1">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
                         Room
                       </h4>
                       <div className="relative">
@@ -389,7 +388,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                           name="roomId"
                           value={formData.roomId}
                           onChange={handleInputChange}
-                          className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100/20 dark:bg-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
+                          className="custom-select custom-border appearance-none rounded p-3 w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ease-in-out disabled:opacity-70 pr-10"
                           disabled={!formData.hallId || loading}
                         >
                           <option value="">Select Room</option>
@@ -399,7 +398,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-white/60" />
+                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-300" />
                       </div>
                     </div>
                   </div>
@@ -408,13 +407,13 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
             </div>
           </div>
 
-          <div className="border-t border-gray-300/40 dark:border-white/20 flex justify-end pt-4 gap-2">
+          <div className="border-t border-gray-300 dark:border-gray-700 flex justify-end pt-4 gap-2">
             {enableEdit && isEditing ? (
               <>
                 <Button
                   variant="outline"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 text-sm bg-gray-100/20 dark:bg-white/10 hover:bg-gray-200/30 dark:hover:bg-white/20 text-gray-900 dark:text-white border-gray-300/40 dark:border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
+                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
                   Cancel
                 </Button>
@@ -438,7 +437,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                   <Button
                     variant="outline"
                     onClick={handleEdit}
-                    className="px-4 py-2 text-sm bg-gray-100/20 dark:bg-white/10 hover:bg-gray-200/30 dark:hover:bg-white/20 text-gray-900 dark:text-white border-gray-300/40 dark:border-white/20 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
+                    className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 transform hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
                   >
                     Edit
                   </Button>
@@ -446,7 +445,7 @@ export const PropertyModal = ({ property, onClose, onEdit, enableEdit = false })
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="px-4 py-2 text-sm bg-gray-100/20 dark:bg-white/10 hover:bg-gray-200/30 dark:hover:bg-white/20 text-gray-900 dark:text-white border-gray-300/40 dark:border-white/20 transform hover:scale-105 transition-all duration-300 ease-in-out"
+                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
                   Done
                 </Button>
