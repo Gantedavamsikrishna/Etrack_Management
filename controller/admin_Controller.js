@@ -1,16 +1,28 @@
 const admin = require("../modals/admin_Scheme");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
 // Create a new admin
 const createAdmin = async (req, res) => {
   try {
-    const { adminId, adminName, adminEmail, adminPassword } = req.body;
+    const { adminId, adminName, adminEmail, adminPassword, userRole } =
+      req.body;
+
+    // Input validation
+    if (!adminId || !adminName || !adminEmail || !adminPassword || !userRole) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     const newAdmin = new admin({
       adminId,
       adminName,
       adminEmail,
-      adminPassword,
+      userRole,
+      adminPassword, // Store plain-text password
       adminImage: req.file ? req.file.filename : null,
     });
+
     await newAdmin.save();
     res.status(201).json({
       message: "Admin data inserted successfully",
@@ -22,7 +34,7 @@ const createAdmin = async (req, res) => {
   }
 };
 
-// get all admin data
+// Get all admin data
 const getAllAdmin = async (req, res) => {
   try {
     const admins = await admin.find();
@@ -35,11 +47,11 @@ const getAllAdmin = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-//delete admin
 
+// Delete admin by ID
 const deleteAdminById = async (req, res) => {
   try {
-    const { adminId } = req.params; // Use route parameter for adminId
+    const { adminId } = req.params;
     const deletedAdmin = await admin.findOneAndDelete({ adminId });
     if (!deletedAdmin) {
       return res.status(404).json({ message: "Admin not found" });
@@ -54,16 +66,22 @@ const deleteAdminById = async (req, res) => {
   }
 };
 
-//update admin by id
+// Update admin by ID
 const updateAdminById = async (req, res) => {
   try {
-    const { adminId } = req.params; // Use route parameter for adminId
-    const { adminName, adminEmail, adminPassword, adminImage } = req.body;
-    const updatedAdmin = await admin.findOneAndUpdate(
-      { adminId }, // Find by adminId field, not _id
-      { adminName, adminEmail, adminPassword, adminImage },
-      { new: true }
-    );
+    const { adminId } = req.params;
+    const { adminName, adminEmail, adminPassword, adminImage, userRole } =
+      req.body;
+
+    const updateData = { adminName, adminEmail, adminImage, userRole };
+    if (adminPassword) {
+      updateData.adminPassword = adminPassword; // Store plain-text password
+    }
+
+    const updatedAdmin = await admin.findOneAndUpdate({ adminId }, updateData, {
+      new: true,
+    });
+
     if (!updatedAdmin) {
       return res.status(404).json({ message: "Admin not found" });
     }
@@ -76,19 +94,60 @@ const updateAdminById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-//login admin
+
+// Login admin with role-based validation (plain-text password)
 const loginAdmin = async (req, res) => {
   try {
-    const { adminEmail, adminPassword } = req.body;
-    const adminData = await admin.findOne({
-      adminEmail,
-      adminPassword,
-    });
-    if (!adminData) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    const { adminEmail, adminPassword, userRole } = req.body;
+
+    // Input validation
+    if (!adminEmail || !adminPassword || !userRole) {
+      return res
+        .status(400)
+        .json({ message: "Email, password, and role are required" });
     }
+
+    // Find admin by email
+    const adminData = await admin.findOne({ adminEmail });
+    console.log("Found admin:", adminData); // Debug log
+    if (!adminData) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Compare plain-text password
+    if (adminPassword !== adminData.adminPassword) {
+      console.log("Password mismatch:", {
+        provided: adminPassword,
+        stored: adminData.adminPassword,
+      }); // Debug log
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Check role
+    if (adminData.userRole && adminData.userRole !== userRole) {
+      console.log("Role mismatch:", {
+        storedRole: adminData.userRole,
+        providedRole: userRole,
+      }); // Debug log
+      return res.status(403).json({ message: "Role mismatch" });
+    }
+
+    // Prepare JWT payload
+    const payload = {
+      adminId: adminData.adminId,
+      adminEmail: adminData.adminEmail,
+      userRole: adminData.userRole || userRole, // Fallback to provided role if missing
+    };
+
+    // Generate JWT token
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1d" });
+
+    // Send response
     res.status(200).json({
       message: "Login successful",
+      token,
+      adminName: adminData.adminName,
+      userRole: adminData.userRole || userRole,
     });
   } catch (error) {
     console.error("Error logging in admin:", error);

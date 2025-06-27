@@ -5,6 +5,7 @@ const admin = new mongoose.Schema({
     type: String,
     required: true,
   },
+
   adminName: {
     type: String,
     required: true,
@@ -19,6 +20,10 @@ const admin = new mongoose.Schema({
   },
   adminImage: {
     type: String,
+  },
+  userRole: {
+    type: String,
+    required: true,
   },
 });
 

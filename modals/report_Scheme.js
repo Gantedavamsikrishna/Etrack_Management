@@ -17,6 +17,11 @@ const reportSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  status: {
+    type: String,
+    enum: ["new", "confirmed", "resolved"],
+    default: "new",
+  },
   createdAt: {
     type: Date,
     default: Date.now,
