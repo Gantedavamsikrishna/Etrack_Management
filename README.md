@@ -1,6 +1,6 @@
 <div align="center">
 
-# Etrack Management System
+#  Etrack Management System
 
 ![Version](https://img.shields.io/badge/version-4.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
@@ -42,7 +42,7 @@ The Floor Incharge interface empowers designated users to:
 
 ---
 
-## Folder Structure
+## 📚 Folder Structure
 
 ```text
 Etrack_Mgmt_System/
@@ -79,9 +79,16 @@ Etrack_Mgmt_System/
 
 ## 📸 Screenshots
 
-> _Add your own screenshots here!_
->
-> ![Dashboard Screenshot](docs/dashboard-sample.png)
+### 📊 Dashboard
+![Dashboard Screenshot](/frontend/src/data/dashboard.jpg)
+
+### 🧑‍🔧 Incharge UI
+![Incharge UI Screenshot](/frontend/src/data/InchargeUi.png)
+
+### 📝 Report Page
+![Report Screenshot](/frontend/src/data/Report.png)
+
+
 
 ---
 
@@ -127,3 +134,6 @@ Visit: [http://localhost:3000](http://localhost:3000)
 > 2. Create a new branch for your feature or bugfix
 > 3. Commit your changes with clear messages
 > 4. Open a pull request describing your changes
+
+---
+
