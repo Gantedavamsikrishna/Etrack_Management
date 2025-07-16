@@ -18,6 +18,39 @@ Etrack Management System helps you easily manage properties, floors, rooms, devi
 
 ---
 
+## 🛠️ Tech Stack
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="200"><b>Frontend</b></td>
+<td align="center" width="200"><b>Backend</b></td>
+<td align="center" width="200"><b>Other Tools</b></td>
+</tr>
+<tr>
+<td align="center">
+  <img src="https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?logo=tailwindcss&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/Recharts-FF6384?logo=recharts&logoColor=white&style=for-the-badge" />
+</td>
+<td align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=for-the-badge" />
+</td>
+<td align="center">
+  <img src="https://img.shields.io/badge/Socket.io-010101?logo=socket.io&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white&style=for-the-badge" />
+</td>
+</tr>
+</table>
+
+</div>
+
+---
+
 ## 🎯 Features
 
 <div align="center">
@@ -54,9 +87,9 @@ Etrack Management System helps you easily manage properties, floors, rooms, devi
 
 </div>
 
+
+
 ---
-
-
 
 
 ## 📚 Folder Structure
@@ -86,49 +119,19 @@ Etrack_Mgmt_System/
 
 ---
 
-## 🛠️ Tech Stack
 
-<div align="center">
 
-<table>
-<tr>
-<td align="center" width="200"><b>Frontend</b></td>
-<td align="center" width="200"><b>Backend</b></td>
-<td align="center" width="200"><b>Other Tools</b></td>
-</tr>
-<tr>
-<td align="center">
-  <img src="https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white&style=for-the-badge" /> <br>
-  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?logo=tailwindcss&logoColor=white&style=for-the-badge" /> <br>
-  <img src="https://img.shields.io/badge/Recharts-FF6384?logo=recharts&logoColor=white&style=for-the-badge" />
-</td>
-<td align="center">
-  <img src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white&style=for-the-badge" /> <br>
-  <img src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=for-the-badge" /> <br>
-  <img src="https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=for-the-badge" />
-</td>
-<td align="center">
-  <img src="https://img.shields.io/badge/Socket.io-010101?logo=socket.io&logoColor=white&style=for-the-badge" /> <br>
-  <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=for-the-badge" /> <br>
-  <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white&style=for-the-badge" />
-</td>
-</tr>
-</table>
-
-</div>
-
----
 
 ## 📸 Screenshots
-
-### 📊 Dashboard
-<img src="frontend/src/data/dashboard.png" alt="Dashboard Screenshot" />
 
 ### 🧑‍🔧 Incharge UI
 <img src="frontend/src/data/InchargeUi.png" alt="Incharge UI Screenshot" />
 
 ### 📝 Report Page
 <img src="frontend/src/data/Report.png" alt="Report Screenshot" />
+
+### 📊 Dashboard
+<img src="frontend/src/data/dashboard.png" alt="Dashboard Screenshot" />
 
 ---
 
