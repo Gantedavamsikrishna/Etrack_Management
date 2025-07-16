@@ -14,33 +14,50 @@
 
 ## ✨ Overview
 
-Etrack Management System is a robust platform designed to streamline the management of properties, floors, rooms, devices, and administrative reports. It features a secure, user-friendly interface for administrators and staff to monitor, update, and report on assets in real time.
+Etrack Management System helps you easily manage properties, floors, rooms, devices, and reports. It provides a simple and secure way for admins and staff to track and update assets in real time.
 
 ---
 
 ## 🎯 Features
 
-- 🔒 **User Authentication** — Secure login & protected routes
-- 📊 **Dashboard** — Key metrics & quick navigation
-- 🏢 **Property & Inventory Management** — Add, edit, and view properties, floors, halls, rooms, and devices
-- 🗺️ **Building Map Visualization** — Interactive map for spatial management
-- 📝 **Reports** — Generate and view detailed reports
-- 👤 **Admin Management** — Manage admin details and permissions
-- ⚡ **Real-time Updates** — WebSocket support for live data and notifications
-- 🌗 **Responsive UI** — Mobile-friendly design with dark mode
-- 🧑‍🔧 **Floor Incharge Interface** — Floor incharges can report device issues, including uploading images for better issue tracking
+<div align="center">
+
+<table><tr>
+<td valign="top" width="50%">
+  <table>
+    <tr style="background-color:#f0f0f0;">
+      <th style="font-size:1.2em; color:#007acc; font-weight:bold; text-align:center;">🚀 Project Features</th>
+    </tr>
+    <tr><td>User Authentication</td></tr>
+    <tr><td>Dashboard</td></tr>
+    <tr><td>Property & Inventory Management</td></tr>
+    <tr><td>Building Map Visualization</td></tr>
+    <tr><td>Reports</td></tr>
+    <tr><td>Admin Management</td></tr>
+    <tr><td>Real-time Updates</td></tr>
+    <tr><td>Responsive UI</td></tr>
+    <tr><td>Floor Incharge Interface</td></tr>
+  </table>
+</td>
+<td valign="top" width="50%">
+  <table>
+    <tr style="background-color:#e0f7fa;">
+      <th style="font-size:1.2em; color:#009688; font-weight:bold; text-align:center;">🧑‍🔧 Floor Incharge Features</th>
+    </tr>
+    <tr><td>Report Device Issues</td></tr>
+    <tr><td>Upload Images for Reports</td></tr>
+    <tr><td>Track Report Status</td></tr>
+    <tr><td>View Assigned Devices</td></tr>
+  </table>
+</td>
+</tr></table>
+
+</div>
 
 ---
 
-## 🧑‍🔧 Floor Incharge Interface
 
-The Floor Incharge interface empowers designated users to:
-- 📋 **Report Device Issues:** Quickly report faulty or missing devices on their assigned floor.
-- 📷 **Upload Images:** Attach images as evidence or for better description of the device issue.
-- 🕒 **Track Report Status:** View the status of submitted reports and receive updates in real time.
-- 🗂️ **View Assigned Devices:** See a list of all devices assigned to their floor for easy management.
 
----
 
 ## 📚 Folder Structure
 
@@ -71,24 +88,47 @@ Etrack_Mgmt_System/
 
 ## 🛠️ Tech Stack
 
-| Frontend           | Backend            | Other Tools        |
-|--------------------|--------------------|--------------------|
-| ![React](https://img.shields.io/badge/-React-61DAFB?logo=react&logoColor=white&style=flat) <br> ![Tailwind](https://img.shields.io/badge/-TailwindCSS-38B2AC?logo=tailwindcss&logoColor=white&style=flat) <br> ![Recharts](https://img.shields.io/badge/-Recharts-FF6384?logo=recharts&logoColor=white&style=flat) | ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white&style=flat) <br> ![Express](https://img.shields.io/badge/-Express-000000?logo=express&logoColor=white&style=flat) <br> ![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?logo=mongodb&logoColor=white&style=flat) | ![Socket.io](https://img.shields.io/badge/-Socket.io-010101?logo=socket.io&logoColor=white&style=flat) <br> ![Vite](https://img.shields.io/badge/-Vite-646CFF?logo=vite&logoColor=white&style=flat) <br> ![ESLint](https://img.shields.io/badge/-ESLint-4B32C3?logo=eslint&logoColor=white&style=flat) |
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="200"><b>Frontend</b></td>
+<td align="center" width="200"><b>Backend</b></td>
+<td align="center" width="200"><b>Other Tools</b></td>
+</tr>
+<tr>
+<td align="center">
+  <img src="https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?logo=tailwindcss&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/Recharts-FF6384?logo=recharts&logoColor=white&style=for-the-badge" />
+</td>
+<td align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=for-the-badge" />
+</td>
+<td align="center">
+  <img src="https://img.shields.io/badge/Socket.io-010101?logo=socket.io&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=for-the-badge" /> <br>
+  <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white&style=for-the-badge" />
+</td>
+</tr>
+</table>
+
+</div>
 
 ---
 
 ## 📸 Screenshots
 
 ### 📊 Dashboard
-![Dashboard Screenshot](/frontend/src/data/dashboard.jpg)
+<img src="frontend/src/data/dashboard.jpg" alt="Dashboard Screenshot" />
 
 ### 🧑‍🔧 Incharge UI
-![Incharge UI Screenshot](/frontend/src/data/InchargeUi.png)
+<img src="frontend/src/data/InchargeUi.png" alt="Incharge UI Screenshot" />
 
 ### 📝 Report Page
-![Report Screenshot](/frontend/src/data/Report.png)
-
-
+<img src="frontend/src/data/Report.png" alt="Report Screenshot" />
 
 ---
 
