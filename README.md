@@ -122,7 +122,7 @@ Etrack_Mgmt_System/
 ## 📸 Screenshots
 
 ### 📊 Dashboard
-<img src="frontend/src/data/dashboard.jpg" alt="Dashboard Screenshot" />
+<img src="frontend/src/data/dashboard.png" alt="Dashboard Screenshot" />
 
 ### 🧑‍🔧 Incharge UI
 <img src="frontend/src/data/InchargeUi.png" alt="Incharge UI Screenshot" />
